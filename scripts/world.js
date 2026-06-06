@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 import { RNG } from './rng';
-import { blocks } from './blocks';
+import { blocks, resources } from './blocks';
+import { builtinAOContext } from 'three/src/nodes/TSL.js';
 
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshLambertMaterial();
@@ -34,8 +35,11 @@ export class World extends THREE.Group {
      * Generates the world data and meshes
      */
     generate() {
+        const rng = new RNG(this.params.seed);
+
         this.initializeTerrain();
-        this.generateTerrain();
+        this.generateResources(rng);
+        //this.generateTerrain(rng);
         this.generateMeshes();
     }
 
@@ -62,10 +66,32 @@ export class World extends THREE.Group {
     }
 
     /**
+     * Generates the resources (coal, stone, etc.) for the world
+     */
+    generateResources(rng) {
+        const simplex = new SimplexNoise(rng);
+
+        resources.forEach(resource => {
+            for (let x = 0; x < this.size.width; x++) {
+                for (let y = 0; y < this.size.height; y++) {
+                    for (let z = 0; z < this.size.height; z++) {
+                        const value = simplex.noise3d(
+                            x / resource.scale.x,
+                            y / resource.scale.y,
+                            z / resource.scale.z);
+
+                        if (value > resource.scarcity) {
+                            this.setBlockId(x, y, z, resource.id);
+                        }
+                    }
+                }
+            }
+        });
+    }
+    /**
      * Generates the terrain data for the world
      */
-    generateTerrain() {
-        const rng = new RNG(this.params.seed);
+    generateTerrain(rng) {
         const simplex = new SimplexNoise(rng);
 
         for (let x = 0; x < this.size.width; x++) {
@@ -87,11 +113,11 @@ export class World extends THREE.Group {
 
                 // Fill in all blocks at or below the terrain height
                 for (let y = 0; y <= this.size.height; y++) {
-                    if (y < height) {
+                    if (y < height && this.getBlock(x, y, z).id === blocks.empty.id) {
                         this.setBlockId(x, y, z, blocks.dirt.id);
                     } else if (y === height) {
                         this.setBlockId(x, y, z, blocks.grass.id);
-                    } else {
+                    } else if (y > height) {
                         this.setBlockId(x, y, z, blocks.empty.id);
                     }
                 }
