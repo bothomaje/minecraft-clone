@@ -4,8 +4,19 @@ import { blocks, resources } from './blocks';
 export function createUI(world) {
     const gui = new GUI();
 
+    const actions = {
+        fullscreen: () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    };
+
     gui.add(world.size, 'width', 8, 128, 1).name('Width');
     gui.add(world.size, 'height', 8, 64, 1).name('Height');
+    gui.add(actions, 'fullscreen').name('Toggle Full Screen');
 
     const terrainFolder = gui.addFolder('Terrain');
     terrainFolder.add(world.params, 'seed', 1, 10000).name('Seed');
