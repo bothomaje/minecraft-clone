@@ -4,6 +4,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './world';
 import { createUI } from './ui';
 import { Player } from './player';
+import Physics from './physics';
 
 // Stats display setup
 const stats = new Stats();
@@ -20,7 +21,6 @@ document.body.appendChild(renderer.domElement);
 
 // Camera setup
 const orbitCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
-orbitCamera.position.set(-32, 16, -32);
 
 // Controls setup
 const controls = new OrbitControls(orbitCamera, renderer.domElement);
@@ -35,6 +35,10 @@ scene.add(world);
 
 // Player setup
 const player = new Player(scene);
+orbitCamera.position.set(player.position.x, player.position.y + 8, player.position.z - 16);
+orbitCamera.lookAt(player.position);
+
+const physics = new Physics(scene);
 
 // Lights setup
 function setupLights() {
@@ -64,7 +68,7 @@ function animate() {
     let dt = (currentTime - previousTime) / 1000;
 
     requestAnimationFrame(animate);
-    player.applyInputs(dt);
+    physics.update(dt, player, world);
     renderer.render(scene, player.controls.isLocked ? player.camera : orbitCamera);
     stats.update();
 
