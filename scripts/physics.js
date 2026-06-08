@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { World } from './world';
+import { WorldChunk } from './worldChunk';
 import { Player } from './player';
 import { blocks } from './blocks';
 
@@ -32,7 +32,7 @@ export default class Physics {
      * Moves the physics simulation forward in time by 'dt'
      * @param {number} dt 
      * @param {Player} player 
-     * @param {World} world 
+     * @param {WorldChunk} world 
      */
     update(dt, player, world) {
         this.accumulator += dt;
@@ -50,7 +50,7 @@ export default class Physics {
     /**
      * Main function for collision detection
      * @param {Player} player 
-     * @param {World} world 
+     * @param {WorldChunk} world 
      */
     detectCollisions(player, world) {
         player.onGround = false;
@@ -67,7 +67,7 @@ export default class Physics {
      * Performs a rough search against the world to return all
      * possible blocks the player may be colliding with
      * @param {Player} player 
-     * @param {World} world 
+     * @param {WorldChunk} world 
      * @returns {[]}
      */
     broadPhase(player, world) {
