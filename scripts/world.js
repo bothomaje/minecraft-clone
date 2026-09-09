@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { WorldChunk } from './worldChunk';
+import { DataStore } from './dataStore';
 
 export class World extends THREE.Group {
     asyncLoading = true;
@@ -7,7 +8,7 @@ export class World extends THREE.Group {
     drawDistance = 1;
 
     chunkSize = {
-        width: 64,
+        width: 32,
         height: 32
     };
 
@@ -20,20 +21,23 @@ export class World extends THREE.Group {
         }
     };
 
+    dataStore = new DataStore();
+
     constructor(seed = 0) {
         super();
         this.seed = seed;
     }
 
     /**
-     * Regenerate the world data model and the meshes 
+     * Regenerate the world data model and the meshes
      */
     generate() {
+        this.dataStore.clear();
         this.disposeChunks();
 
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
-                const chunk = new WorldChunk(this.chunkSize, this.params);
+                const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
                 chunk.position.set(x * this.chunkSize.width, 0, z * this.chunkSize.width);
                 chunk.generate();
                 chunk.userData = { x, z };
@@ -45,7 +49,7 @@ export class World extends THREE.Group {
     /**
      * Updates the visible portions of the world based on the
      * current player position
-     * @param {Player} player 
+     * @param {Player} player
      */
     update(player) {
         const visibleChunks = this.getVisibleChunks(player);
@@ -60,7 +64,7 @@ export class World extends THREE.Group {
     /**
      * Returns an array containing the coordinates of the chunks that
      * are currently visible to the player
-     * @param {Player} player 
+     * @param {Player} player
      * @returns {{ x: number, z: number }[]}
      */
     getVisibleChunks(player) {
@@ -86,7 +90,7 @@ export class World extends THREE.Group {
     /**
      * Returns an array containing the coordinates of the chunks
      * that are not yet loaded and need to be added to the scene
-     * @param {{ x: number, z: number }[]} visibleChunks 
+     * @param {{ x: number, z: number }[]} visibleChunks
      * @returns {{ x: number, z: number }[]}
      */
     getChunksToAdd(visibleChunks) {
@@ -104,7 +108,7 @@ export class World extends THREE.Group {
 
     /**
      * Removes current loaded chunks that are no longer visible to the player
-     * @param {{ x: number, z: number }[]} visibleChunks 
+     * @param {{ x: number, z: number }[]} visibleChunks
      */
     removeUnusedChunks(visibleChunks) {
         // Filter down the visible chunks to those not already in the world
@@ -126,11 +130,11 @@ export class World extends THREE.Group {
 
     /**
      * Generates the chunk at the (x,z) coordinates
-     * @param {number} x 
-     * @param {number} z 
+     * @param {number} x
+     * @param {number} z
      */
     generateChunk(x, z) {
-        const chunk = new WorldChunk(this.chunkSize, this.params);
+        const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
         chunk.position.set(x * this.chunkSize.width, 0, z * this.chunkSize.width);
         chunk.userData = { x, z };
 
@@ -140,14 +144,14 @@ export class World extends THREE.Group {
         } else {
             chunk.generate();
         }
-        
+
         this.add(chunk);
     }
 
     /**
      * Gets the block data at (x, y, z)
-     * @param {number} x 
-     * @param {number} y 
+     * @param {number} x
+     * @param {number} y
      * @param {number} z
      * @returns {{id: number, instanceId: number} | null}
      */
@@ -170,9 +174,9 @@ export class World extends THREE.Group {
      * Returns the coordinates of the block at (x,y,z)
      *  - `chunk` is the coordinates of the chunk containing the block
      *  - `block` is the coordinates of the block relative to the chunk
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
      * @returns {{
      *  chunk: { x: number, z: number },
      *  block: { x: number, y: number, z: number }
@@ -198,8 +202,8 @@ export class World extends THREE.Group {
 
     /**
      * Returns the WorldChunk object at the specified coordinates
-     * @param {number} chunkX 
-     * @param {number} chunkZ 
+     * @param {number} chunkX
+     * @param {number} chunkZ
      * @returns {WorldChunk | null}
      */
     getChunk(chunkX, chunkZ) {
@@ -216,5 +220,99 @@ export class World extends THREE.Group {
             }
         });
         this.clear();
+    }
+
+    /**
+     * Adds a new block at (x, y, z) of type `blockId`
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     * @param {number} blockId
+     */
+    addBlock(x, y, z, blockId) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.addBlock(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z,
+                blockId
+            );
+
+            // Hide adjacent neighbours if they are now hidden
+            this.hideBlock(x - 1, y, z);
+            this.hideBlock(x + 1, y, z);
+            this.hideBlock(x, y - 1, z);
+            this.hideBlock(x, y + 1, z);
+            this.hideBlock(x, y, z - 1);
+            this.hideBlock(x, y, z + 1);
+        }
+    }
+
+    /**
+     * Removes the block at (x, y, z) and sets it to empty
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    removeBlock(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.removeBlock(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            );
+
+            // Reveal adjacent neighbours if they are hidden
+            this.revealBlock(x - 1, y, z);
+            this.revealBlock(x + 1, y, z);
+            this.revealBlock(x, y - 1, z);
+            this.revealBlock(x, y + 1, z);
+            this.revealBlock(x, y, z - 1);
+            this.revealBlock(x, y, z + 1);
+        }
+    }
+
+    /**
+     * Reveals the block at (x, y, z) by adding a new mesh instance
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    revealBlock(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk) {
+            chunk.addBlockInstance(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            );
+        }
+    }
+
+    /**
+     * Hides the block at (x, y, z) by removing the mesh instance
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    hideBlock(x, y, z) {
+        const coords = this.worldToChunkCoords(x, y, z);
+        const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+        if (chunk && chunk.isBlockObscured(coords.block.x, coords.block.y, coords.block.z)) {
+            chunk.deleteBlockInstance(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z
+            );
+        }
     }
 }
