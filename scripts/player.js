@@ -22,7 +22,7 @@ export class Player {
 
     raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(), 0, 3);
     selectedCoords = null;
-    activeBlockId = blocks.grass.id;
+    activeBlockId = blocks.empty.id;
 
     tool = new Tool();
 
@@ -169,8 +169,10 @@ export class Player {
             case 'Digit6':
             case 'Digit7':
             case 'Digit8':
-            // case 'Digit9':
+                document.getElementById(`toolbar-${this.activeBlockId}`).classList.remove('selected');
                 this.activeBlockId = Number(event.key);
+                document.getElementById(`toolbar-${this.activeBlockId}`).classList.add('selected');
+                this.tool.visible = (this.activeBlockId === blocks.empty.id);
                 break;
             case 'KeyW':
                 this.input.z = this.maxSpeed;
