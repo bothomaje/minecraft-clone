@@ -15,9 +15,26 @@ export class World extends THREE.Group {
     params = {
         seed: 0,
         terrain: {
+            scale: 80,
+            magnitude: 10,
+            offset: 4,
+            waterLevel: 3
+        },
+        trees: {
+            trunk: {
+                minHeight: 5,
+                maxHeight: 7
+            },
+            canopy: {
+                minRadius: 2,
+                maxRadius: 3,
+                density: 0.5  // varies between 0.0 and 1.0
+            },
+            frequency: 0.005
+        },
+        clouds: {
             scale: 30,
-            magnitude: 0.5,
-            offset: 0.2
+            density: 0.5
         }
     };
 

@@ -28,8 +28,9 @@ export class Player {
      */
     constructor(scene) {
         this.camera.position.set(32, 16, 32);
+        this.camera.layers.enable(1);
         scene.add(this.camera);
-        scene.add(this.cameraHelper);
+        // scene.add(this.cameraHelper);
 
         document.addEventListener('keydown', this.onKeyDown.bind(this));
         document.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -49,6 +50,8 @@ export class Player {
         const selectionGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
         this.selectionHelper = new THREE.Mesh(selectionGeometry, selectionMaterial);
         scene.add(this.selectionHelper);
+
+        this.raycaster.layers.set(0);
     }
 
     /**
@@ -157,6 +160,10 @@ export class Player {
             case 'Digit3':
             case 'Digit4':
             case 'Digit5':
+            case 'Digit6':
+            case 'Digit7':
+            case 'Digit8':
+            // case 'Digit9':
                 this.activeBlockId = Number(event.key);
                 break;
             case 'KeyW':

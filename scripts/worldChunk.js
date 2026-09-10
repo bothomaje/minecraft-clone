@@ -32,6 +32,8 @@ export class WorldChunk extends THREE.Group {
         this.initializeTerrain();
         this.generateResources(rng);
         this.generateTerrain(rng);
+        this.generateTrees(rng);
+        this.generateClouds(rng);
         this.loadPlayerChanges();
         this.generateMeshes();
 
@@ -101,20 +103,99 @@ export class WorldChunk extends THREE.Group {
                 const scaledNoise = this.params.terrain.offset + this.params.terrain.magnitude * value;
 
                 // Computing the height of the terrain at this x-z location
-                let height = Math.floor(this.size.height * scaledNoise);
+                let height = Math.floor(scaledNoise);
 
                 // Clamping height between 0 and max height
                 height = Math.max(0, Math.min(height, this.size.height - 1));
 
                 // Fill in all blocks at or below the terrain height
                 for (let y = 0; y < this.size.height; y++) {
-                    if (y < height && this.getBlock(x, y, z).id === blocks.empty.id) {
-                        this.setBlockId(x, y, z, blocks.dirt.id);
+                    if (y <= this.params.terrain.waterLevel && y <= height) {
+                        this.setBlockId(x, y, z, blocks.sand.id)
                     } else if (y === height) {
                         this.setBlockId(x, y, z, blocks.grass.id);
+                    } else if (y < height && this.getBlock(x, y, z).id === blocks.empty.id) {
+                        this.setBlockId(x, y, z, blocks.dirt.id);
                     } else if (y > height) {
                         this.setBlockId(x, y, z, blocks.empty.id);
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Populate the world with trees
+     * @param {RNG} rng
+     */
+    generateTrees() {
+        const generateTreeTrunk = (x, z, rng) => {
+            const minHeight = this.params.trees.trunk.minHeight;
+            const maxHeight = this.params.trees.trunk.maxHeight;
+            const height = Math.round(minHeight + (maxHeight - minHeight) * rng.random());
+
+            for (let y = 0; y < this.size.height; y++) {
+                const block = this.getBlock(x, y, z);
+                if (block && block.id === blocks.grass.id) {
+                    // Tree trunk starts here
+                    for (let treeY = y + 1; treeY <= y + height; treeY++) {
+                        this.setBlockId(x, treeY, z, blocks.tree.id);
+                    }
+                    generateTreeCanopy(x, y + height, z, rng);
+                    break;
+                }
+            }
+        }
+
+        const generateTreeCanopy = (centreX, centreY, centreZ, rng) => {
+            const minRadius = this.params.trees.canopy.minRadius;
+            const maxRadius = this.params.trees.canopy.maxRadius;
+            const radius = Math.round(minRadius + (maxRadius - minRadius) * rng.random());
+
+            for (let x = -radius; x <= radius; x++) {
+                for (let y = -radius; y <= radius; y++) {
+                    for (let z = -radius; z <= radius; z++) {
+                        const n = rng.random();
+
+                        if ((x * x + y * y + z * z) >= radius * radius) continue;
+
+                        const block = this.getBlock(centreX + x, centreY + y, centreZ + z);
+                        if (block && block.id !== blocks.empty.id) continue;
+
+                        if (n < this.params.trees.canopy.density) {
+                            this.setBlockId(centreX + x, centreY + y, centreZ + z, blocks.leaves.id);
+                        }
+                    }
+                }
+            }
+        }
+
+        let rng = new RNG(this.params.seed);
+        let offset = this.params.trees.canopy.maxRadius;
+        for (let x = offset; x < this.size.width - offset; x++) {
+            for (let z = offset; z < this.size.width - offset; z++) {
+                if (rng.random() < this.params.trees.frequency) {
+                    generateTreeTrunk(x, z, rng);
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates happy little clouds
+     * @param {RNG} rng
+     */
+    generateClouds(rng) {
+        const simplex = new SimplexNoise(rng);
+        for (let x = 0; x < this.size.width; x++) {
+            for (let z = 0; z < this.size.width; z++) {
+                const value = (simplex.noise(
+                    (this.position.x + x) / this.params.clouds.scale,
+                    (this.position.z + z) / this.params.clouds.scale
+                ) + 1) * 0.5;
+
+                if (value < this.params.clouds.density) {
+                    this.setBlockId(x, this.size.height - 1, z, blocks.cloud.id);
                 }
             }
         }
@@ -136,11 +217,34 @@ export class WorldChunk extends THREE.Group {
         }
     }
 
+    generateWater() {
+        const material = new THREE.MeshLambertMaterial({
+            color: 0x9090e0,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(), material);
+        mesh.rotateX(-Math.PI / 2.0);
+        mesh.position.set(
+            this.size.width / 2,
+            this.params.terrain.waterLevel + 0.4,
+            this.size.width / 2
+        );
+        mesh.scale.set(this.size.width, this.size.width, 1);
+        mesh.layers.set(1);
+
+        this.add(mesh);
+    }
+
     /**
      * Generates the 3D representation of the world from the world data
      */
     generateMeshes() {
         this.clear();
+
+        this.generateWater();
 
         const maxCount = this.size.width * this.size.width * this.size.height;
 
