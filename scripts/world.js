@@ -80,8 +80,16 @@ export class World extends THREE.Group {
      * Loads the game from disk
      */
     load() {
-        this.params = JSON.parse(localStorage.getItem('minecraft_params'));
-        this.dataStore.data = JSON.parse(localStorage.getItem('minecraft_data'));
+        const parameters = localStorage.getItem('minecraft_params');
+        const data = localStorage.getItem('minecraft_data');
+
+        if (!parameters || !data) {
+            console.warn('No data has been saved yet.')
+            return;
+        }
+
+        this.params = JSON.parse(parameters);
+        this.dataStore.data = JSON.parse(data);
         document.getElementById('status').innerHTML = 'Game loaded';
         setTimeout(() => document.getElementById('status').innerHTML = '', 3000);
         this.generate();

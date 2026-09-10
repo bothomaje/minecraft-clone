@@ -23,22 +23,16 @@ export default class Physics {
 
     gravity = 32;
 
-    constructor(scene) {
-        this.helpers = new THREE.Group();
-        scene.add(this.helpers);
-    }
-
     /**
      * Moves the physics simulation forward in time by 'dt'
-     * @param {number} dt 
-     * @param {Player} player 
-     * @param {WorldChunk} world 
+     * @param {number} dt
+     * @param {Player} player
+     * @param {WorldChunk} world
      */
     update(dt, player, world) {
         this.accumulator += dt;
 
         while (this.accumulator >= this.timestep) {
-            this.helpers.clear();
             player.velocity.y -= this.gravity * this.timestep;
             player.applyInputs(this.timestep);
             player.updateBoundsHelper();
@@ -49,8 +43,8 @@ export default class Physics {
 
     /**
      * Main function for collision detection
-     * @param {Player} player 
-     * @param {WorldChunk} world 
+     * @param {Player} player
+     * @param {WorldChunk} world
      */
     detectCollisions(player, world) {
         player.onGround = false;
@@ -66,8 +60,8 @@ export default class Physics {
     /**
      * Performs a rough search against the world to return all
      * possible blocks the player may be colliding with
-     * @param {Player} player 
-     * @param {WorldChunk} world 
+     * @param {Player} player
+     * @param {WorldChunk} world
      * @returns {[]}
      */
     broadPhase(player, world) {
@@ -98,7 +92,6 @@ export default class Physics {
                     if (block && block.id !== blocks.empty.id) {
                         const blockPos = { x, y, z };
                         candidates.push(blockPos);
-                        this.addCollisionHelper(blockPos);
                     }
                 }
             }
@@ -110,8 +103,8 @@ export default class Physics {
     /**
      * Narrows down the blocks found in the broad-phase to the set
      * of blocks the player is actually colliding with
-     * @param {{ x: number, y: number, z: number }[]} candidates 
-     * @param {Player} player 
+     * @param {{ x: number, y: number, z: number }[]} candidates
+     * @param {Player} player
      * @returns {[]}
      */
     narrowPhase(candidates, player) {
@@ -162,19 +155,16 @@ export default class Physics {
                     normal,
                     overlap
                 });
-
-                this.addContactPointHelper(closestPoint);
-
             }
         }
-        
+
         return collisions;
     }
 
     /**
      * Resolves each of the collisions found in the narrow phase
-     * @param {object} collisions 
-     * @param {Player} player 
+     * @param {object} collisions
+     * @param {Player} player
      */
     resolveCollisions(collisions, player) {
         // Resolve the collisions in order of the smallest overlap to the largest
@@ -203,29 +193,9 @@ export default class Physics {
     }
 
     /**
-     * Visualizes the block the player is colliding with
-     * @param {THREE.Object3D} block
-     */
-    addCollisionHelper(block) {
-        const blockMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
-        blockMesh.position.copy(block);
-        this.helpers.add(blockMesh);
-    }
-
-    /**
-     * Visualizes the contact at the point 'p'
-     * @param {{ x, y, z }} p 
-     */
-    addContactPointHelper(p) {
-        const contactMesh = new THREE.Mesh(contactGeometry, contactMaterial);
-        contactMesh.position.copy(p);
-        this.helpers.add(contactMesh);
-    }
-
-    /**
      * Returns true if the point 'p' is inside the player's bounding cylinder
-     * @param {{ x: number, y: number, z: number}} p 
-     * @param {Player} player 
+     * @param {{ x: number, y: number, z: number}} p
+     * @param {Player} player
      * @returns {boolean}
      */
     pointInPlayerBoundingCylinder(p, player) {

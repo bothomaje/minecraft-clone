@@ -34,17 +34,17 @@ export function createUI(scene, world, player) {
     terrainFolder.add(world.params.terrain, 'waterLevel', 0, 32, 1).name('Water Level');
 
     const biomesFolder = terrainFolder.addFolder('Biomes').close();
-    terrainFolder.add(world.params.biomes, 'scale', 10, 500).name('Scale');
-    terrainFolder.add(world.params.biomes.variation, 'amplitude', 10, 500).name('Variation Amplitude');
-    terrainFolder.add(world.params.biomes.variation, 'scale', 10, 500).name('Variation Scale');
-    terrainFolder.add(world.params.biomes, 'tundraToTemperate', 0, 1).name('Tundra -> Temperate');
-    terrainFolder.add(world.params.biomes, 'temperateToJungle', 0, 1).name('Temperate -> Jungle');
-    terrainFolder.add(world.params.biomes, 'jungleToDesert', 0, 1).name('Jungle -> Desert');
+    biomesFolder.add(world.params.biomes, 'scale', 10, 500).name('Scale');
+    biomesFolder.add(world.params.biomes.variation, 'amplitude', 10, 500).name('Variation Amplitude');
+    biomesFolder.add(world.params.biomes.variation, 'scale', 10, 500).name('Variation Scale');
+    biomesFolder.add(world.params.biomes, 'tundraToTemperate', 0, 1).name('Tundra -> Temperate');
+    biomesFolder.add(world.params.biomes, 'temperateToJungle', 0, 1).name('Temperate -> Jungle');
+    biomesFolder.add(world.params.biomes, 'jungleToDesert', 0, 1).name('Jungle -> Desert');
 
     const resourcesFolder = terrainFolder.addFolder('Resources').close();
     resources.forEach(resource => {
         const resourceFolder = resourcesFolder.addFolder(resource.name).close();
-        resourceFolder.add(blocks.stone, 'scarcity', 0, 1).name('Scarcity');
+        resourceFolder.add(resource, 'scarcity', 0, 1).name('Scarcity');
 
         const scaleFolder = resourceFolder.addFolder('Scale');
         scaleFolder.add(resource.scale, 'x', 10, 100).name('X Scale');

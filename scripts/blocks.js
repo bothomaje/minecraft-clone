@@ -123,12 +123,12 @@ export const blocks = {
     },
     jungleLeaves: {
         id: 12,
-        name: 'leaves',
+        name: 'jungleLeaves',
         material: new THREE.MeshLambertMaterial({ map: textures.jungleLeaves, color: 0x79C05A })
     },
     cactus: {
         id: 13,
-        name: 'jungleTree',
+        name: 'cactus',
         material: [
             new THREE.MeshLambertMaterial({ map: textures.cactusSide }),
             new THREE.MeshLambertMaterial({ map: textures.cactusSide }),

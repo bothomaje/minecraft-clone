@@ -50,7 +50,7 @@ modelLoader.loadModels((models) => {
     player.tool.setMesh(models.pickaxe);
 })
 
-const physics = new Physics(scene);
+const physics = new Physics();
 
 // Lights setup
 const sun = new THREE.DirectionalLight();

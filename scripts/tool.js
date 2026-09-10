@@ -22,7 +22,7 @@ export class Tool extends THREE.Group {
         this.animate = true;
         this.animationStart = performance.now();
 
-        clearTimeout(this.animate);
+        clearTimeout(this.animation);
 
         this.animation = setTimeout(() => {
             this.animate = false;
