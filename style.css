@@ -38,3 +38,12 @@ body {
 .toolbar-icon.selected {
     outline: 2px solid white;
 }
+
+#status {
+    position: fixed;
+    bottom: 8px;
+    left: 8px;
+    font-size: 2em;
+    font-family: sans-serif;
+    color: white;
+}
