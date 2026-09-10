@@ -6,6 +6,7 @@ import { createUI } from './ui';
 import { Player } from './player';
 import Physics from './physics';
 import { blocks } from './blocks';
+import { ModelLoader } from './modelLoader';
 
 // Stats display setup
 const stats = new Stats();
@@ -33,7 +34,9 @@ controls.update();
 // Scene setup
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x80a0e0, 50, 100);
+
 const world = new World();
+
 world.generate();
 scene.add(world);
 
@@ -41,6 +44,11 @@ scene.add(world);
 const player = new Player(scene);
 orbitCamera.position.set(player.position.x, player.position.y + 8, player.position.z - 16);
 orbitCamera.lookAt(player.position);
+
+const modelLoader = new ModelLoader();
+modelLoader.loadModels((models) => {
+    player.tool.setMesh(models.pickaxe);
+})
 
 const physics = new Physics(scene);
 
@@ -74,6 +82,7 @@ function onMouseDown(event) {
                 player.selectedCoords.y,
                 player.selectedCoords.z
             );
+            player.tool.startAnimation();
         } else {
             world.addBlock(
                 player.selectedCoords.x,

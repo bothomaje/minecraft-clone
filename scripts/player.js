@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { blocks } from './blocks';
+import { Tool } from './tool';
 
 const CENTRE_SCREEN = new THREE.Vector2();
 
@@ -23,6 +24,8 @@ export class Player {
     selectedCoords = null;
     activeBlockId = blocks.grass.id;
 
+    tool = new Tool();
+
     /**
      * @param {THREE.Scene} scene
      */
@@ -31,6 +34,8 @@ export class Player {
         this.camera.layers.enable(1);
         scene.add(this.camera);
         // scene.add(this.cameraHelper);
+
+        this.camera.add(this.tool);
 
         document.addEventListener('keydown', this.onKeyDown.bind(this));
         document.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -70,6 +75,7 @@ export class Player {
      */
     update(world) {
         this.updateRaycaster(world);
+        this.tool.update();
     }
 
     /**
