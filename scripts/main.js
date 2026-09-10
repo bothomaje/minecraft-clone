@@ -56,6 +56,7 @@ const physics = new Physics(scene);
 const sun = new THREE.DirectionalLight();
 
 function setupLights() {
+    sun.intensity = 3;
     sun.position.set(50, 50, 50);
     sun.castShadow = true;
     sun.shadow.camera.left = -100;
@@ -65,6 +66,7 @@ function setupLights() {
     sun.shadow.camera.near = 0.1;
     sun.shadow.camera.far = 200;
     sun.shadow.bias = -0.0005;
+    sun.shadow.normalBias = 0.01;
     sun.shadow.mapSize = new THREE.Vector2(2048, 2048);
     scene.add(sun);
     scene.add(sun.target);

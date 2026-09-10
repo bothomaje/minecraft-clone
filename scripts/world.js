@@ -5,11 +5,11 @@ import { DataStore } from './dataStore';
 export class World extends THREE.Group {
     asyncLoading = true;
 
-    drawDistance = 1;
+    drawDistance = 2;
 
     chunkSize = {
         width: 32,
-        height: 32
+        height: 64
     };
 
     params = {
@@ -17,8 +17,18 @@ export class World extends THREE.Group {
         terrain: {
             scale: 80,
             magnitude: 10,
-            offset: 4,
+            offset: 5,
             waterLevel: 3
+        },
+        biomes: {
+            scale: 200,
+            variation: {
+                amplitude: 0.2,
+                scale: 50
+            },
+            tundraToTemperate: 0.25,
+            temperateToJungle: 0.5,
+            jungleToDesert: 0.75
         },
         trees: {
             trunk: {
