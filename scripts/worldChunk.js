@@ -6,6 +6,10 @@ import { blocks, resources } from './blocks';
 const geometry = new THREE.BoxGeometry();
 
 export class WorldChunk extends THREE.Group {
+    // Extra instance capacity reserved on top of what's needed at generation time,
+    // so placing a handful of new blocks doesn't immediately force a mesh resize
+    static PLACEMENT_HEADROOM = 64;
+
     /**
      *
      * @type {{
@@ -279,21 +283,35 @@ export class WorldChunk extends THREE.Group {
 
         this.generateWater();
 
-        const maxCount = this.size.width * this.size.width * this.size.height;
+        // First pass: count how many *visible* instances each block type actually
+        // needs in this chunk. Most chunks won't contain most block types at all.
+        const counts = {};
+        for (let x = 0; x < this.size.width; x++) {
+            for (let y = 0; y < this.size.height; y++) {
+                for (let z = 0; z < this.size.width; z++) {
+                    const blockId = this.getBlock(x, y, z).id;
+                    if (blockId === blocks.empty.id) continue;
+                    if (this.isBlockObscured(x, y, z)) continue;
+                    counts[blockId] = (counts[blockId] || 0) + 1;
+                }
+            }
+        }
 
-        // Creating a lookup table where the key is the block id
+        // Second pass: only create a mesh for block types actually present here,
+        // sized to what's needed plus a little headroom for later placement.
         const meshes = {};
+        for (const blockIdStr of Object.keys(counts)) {
+            const blockId = Number(blockIdStr);
+            const blockType = Object.values(blocks).find(b => b.id === blockId);
+            const capacity = counts[blockId] + WorldChunk.PLACEMENT_HEADROOM;
 
-        Object.values(blocks)
-            .filter(blockType => blockType.id !== blocks.empty.id)
-            .forEach(blockType => {
-                const mesh = new THREE.InstancedMesh(geometry, blockType.material, maxCount);
-                mesh.name = blockType.id;
-                mesh.count = 0;
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                meshes[blockType.id] = mesh;
-            });
+            const mesh = new THREE.InstancedMesh(geometry, blockType.material, capacity);
+            mesh.name = blockType.id;
+            mesh.count = 0;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            meshes[blockId] = mesh;
+        }
 
         const matrix = new THREE.Matrix4();
         for (let x = 0; x < this.size.width; x++) {
@@ -302,21 +320,70 @@ export class WorldChunk extends THREE.Group {
                     const blockId = this.getBlock(x, y, z).id;
 
                     if (blockId === blocks.empty.id) continue;
+                    if (this.isBlockObscured(x, y, z)) continue;
 
                     const mesh = meshes[blockId];
                     const instanceId = mesh.count;
 
-                    if (!this.isBlockObscured(x, y, z)) {
-                        matrix.setPosition(x, y, z);
-                        mesh.setMatrixAt(instanceId, matrix);
-                        this.setBlockInstanceId(x, y, z, instanceId);
-                        mesh.count++;
-                    }
+                    matrix.setPosition(x, y, z);
+                    mesh.setMatrixAt(instanceId, matrix);
+                    this.setBlockInstanceId(x, y, z, instanceId);
+                    mesh.count++;
                 }
             }
         }
 
         this.add(...Object.values(meshes));
+    }
+
+    /**
+     * Finds the instanced mesh for `blockId` in this chunk, creating a new
+     * (small-capacity) one if this block type wasn't present at generation time
+     * @param {number} blockId
+     * @returns {THREE.InstancedMesh}
+     */
+    getOrCreateMesh(blockId) {
+        let mesh = this.children.find((child) => child.name === blockId);
+
+        if (!mesh) {
+            const blockType = Object.values(blocks).find(b => b.id === blockId);
+            mesh = new THREE.InstancedMesh(geometry, blockType.material, WorldChunk.PLACEMENT_HEADROOM);
+            mesh.name = blockId;
+            mesh.count = 0;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            this.add(mesh);
+        }
+
+        return mesh;
+    }
+
+    /**
+     * Replaces `mesh` with a copy that has more instance capacity, preserving
+     * all existing instance matrices and their instance ids
+     * @param {THREE.InstancedMesh} mesh
+     * @returns {THREE.InstancedMesh}
+     */
+    growMesh(mesh) {
+        const newCapacity = mesh.instanceMatrix.count + WorldChunk.PLACEMENT_HEADROOM;
+        const blockType = Object.values(blocks).find(b => b.id === Number(mesh.name));
+
+        const newMesh = new THREE.InstancedMesh(geometry, blockType.material, newCapacity);
+        newMesh.name = mesh.name;
+        newMesh.castShadow = true;
+        newMesh.receiveShadow = true;
+
+        const matrix = new THREE.Matrix4();
+        for (let i = 0; i < mesh.count; i++) {
+            mesh.getMatrixAt(i, matrix);
+            newMesh.setMatrixAt(i, matrix);
+        }
+        newMesh.count = mesh.count;
+
+        this.remove(mesh);
+        this.add(newMesh);
+
+        return newMesh;
     }
 
     /**
@@ -417,8 +484,13 @@ export class WorldChunk extends THREE.Group {
 
         // Verify the block exists and is not an empty block type
         if (block && block.id !== blocks.empty.id && block.instanceId === null) {
-            // Get the mesh and instance id of the block
-            const mesh = this.children.find((instanceMesh) => instanceMesh.name === block.id);
+            // Get the mesh for the block, creating it if this block type wasn't
+            // present when the chunk was generated, and growing it if it's full
+            let mesh = this.getOrCreateMesh(block.id);
+            if (mesh.count >= mesh.instanceMatrix.count) {
+                mesh = this.growMesh(mesh);
+            }
+
             const instanceId = mesh.count++;
             this.setBlockInstanceId(x, y, z, instanceId);
 
