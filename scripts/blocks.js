@@ -11,22 +11,22 @@ function loadTexture(path) {
 }
 
 const textures = {
-    dirt: loadTexture('textures/dirt.png'),
-    grassTop: loadTexture('textures/grass_block_top.png'),
-    grassSide: loadTexture('textures/grass_block_side.png'),
-    stone: loadTexture('textures/stone.png'),
-    coalOre: loadTexture('textures/coal_ore.png'),
-    ironOre: loadTexture('textures/iron_ore.png'),
-    leaves: loadTexture('textures/oak_leaves.png'),
-    treeTop: loadTexture('textures/oak_log_top.png'),
-    treeSide: loadTexture('textures/oak_log.png'),
-    sand: loadTexture('textures/sand.png'),
-    jungleLeaves: loadTexture('textures/jungle_leaves.png'),
-    jungleTreeTop: loadTexture('textures/jungle_log_top.png'),
-    jungleTreeSide: loadTexture('textures/jungle_log.png'),
-    snow: loadTexture('/textures/snow.png'),
-    cactusTop: loadTexture('/textures/cactus_top.png'),
-    cactusSide: loadTexture('/textures/cactus_side.png')
+    dirt: loadTexture('textures/block/dirt.png'),
+    grassTop: loadTexture('textures/block/grass_block_top.png'),
+    grassSide: loadTexture('textures/block/grass_block_side.png'),
+    stone: loadTexture('textures/block/stone.png'),
+    coalOre: loadTexture('textures/block/coal_ore.png'),
+    ironOre: loadTexture('textures/block/iron_ore.png'),
+    leaves: loadTexture('textures/block/oak_leaves.png'),
+    treeTop: loadTexture('textures/block/oak_log_top.png'),
+    treeSide: loadTexture('textures/block/oak_log.png'),
+    sand: loadTexture('textures/block/sand.png'),
+    jungleLeaves: loadTexture('textures/block/jungle_leaves.png'),
+    jungleTreeTop: loadTexture('textures/block/jungle_log_top.png'),
+    jungleTreeSide: loadTexture('textures/block/jungle_log.png'),
+    snow: loadTexture('textures/block/snow.png'),
+    cactusTop: loadTexture('textures/block/cactus_top.png'),
+    cactusSide: loadTexture('textures/block/cactus_side.png')
 }
 
 export const blocks = {
