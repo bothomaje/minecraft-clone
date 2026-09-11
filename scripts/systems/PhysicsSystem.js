@@ -1,26 +1,39 @@
 import * as THREE from 'three';
-import { blocks } from './blocks';
-import { CONFIG } from './app/config';
+import { blocks } from '../blocks';
+import { CONFIG } from '../app/config';
 
-// const collisionMaterial = new THREE.MeshBasicMaterial({
-//   color: 0xff0000,
-//   transparent: true,
-//   opacity: 0.2,
-// });
-// const collisionGeometry = new THREE.BoxGeometry(1.001, 1.001, 1.001);
+const collisionMaterial = new THREE.MeshBasicMaterial(
+  CONFIG.physics.debug.collision.material,
+);
+const collisionGeometry = new THREE.BoxGeometry(
+  CONFIG.physics.debug.collision.geometry,
+  CONFIG.physics.debug.collision.geometry,
+  CONFIG.physics.debug.collision.geometry,
+);
 
-// const contactMaterial = new THREE.MeshBasicMaterial({
-//   wireframe: true,
-//   color: 0x00ff00,
-// });
-// const contactGeometry = new THREE.SphereGeometry(0.05, 6, 6);
+const contactMaterial = new THREE.MeshBasicMaterial(
+  CONFIG.physics.debug.contact.material,
+);
+const contactGeometry = new THREE.SphereGeometry(
+  CONFIG.physics.debug.contact.geometry.radius,
+  CONFIG.physics.debug.contact.geometry.widthSegments,
+  CONFIG.physics.debug.contact.geometry.heightSegments,
+);
 
-export default class Physics {
+export class PhysicsSystem {
   simulationRate = CONFIG.physics.simulationRate;
   timestep = 1 / this.simulationRate;
   accumulator = 0;
-
   gravity = CONFIG.physics.gravity;
+  helpers = new THREE.Group();
+
+  constructor(scene) {
+    this.helpers = new THREE.Group();
+
+    if (CONFIG.physics.debug.enabled) {
+      scene.add(this.helpers);
+    }
+  }
 
   /**
    * Moves the physics simulation forward in time by 'dt'
@@ -32,6 +45,8 @@ export default class Physics {
     this.accumulator += dt;
 
     while (this.accumulator >= this.timestep) {
+      if (CONFIG.physics.debug.enabled) this.helpers.clear();
+
       player.velocity.y -= this.gravity * this.timestep;
       player.applyInputs(this.timestep);
       // player.updateBoundsHelper();
@@ -91,6 +106,7 @@ export default class Physics {
           if (block && block.id !== blocks.empty.id) {
             const blockPos = { x, y, z };
             candidates.push(blockPos);
+            if (CONFIG.physics.debug.enabled) this.addCollisionHelper(blockPos);
           }
         }
       }
@@ -124,15 +140,14 @@ export default class Physics {
 
       // Determine if point is inside player's bounding cylinder
       // Get distance along each axis between closest point and the centre of the player's bounding cylinder
-      const dx = closestPoint.x - player.position.x;
-      const dy = closestPoint.y - (player.position.y - player.height / 2);
-      const dz = closestPoint.z - player.position.z;
-
       if (this.pointInPlayerBoundingCylinder(closestPoint, player)) {
         // If true, compute the following:
         //    - Contact Point = closestPoint
         //    - Overlap
         //    - Collision Normal
+        const dx = closestPoint.x - player.position.x;
+        const dy = closestPoint.y - (player.position.y - player.height / 2);
+        const dz = closestPoint.z - player.position.z;
 
         // Compute the overlap between the point and the player's bounding
         // cylinder along the y-axis and in the xz-plane
@@ -157,6 +172,8 @@ export default class Physics {
           normal,
           overlap,
         });
+        if (CONFIG.physics.debug.enabled)
+          this.addContactPointHelper(closestPoint);
       }
     }
 
@@ -171,7 +188,7 @@ export default class Physics {
   resolveCollisions(collisions, player) {
     // Resolve the collisions in order of the smallest overlap to the largest
     collisions.sort((a, b) => {
-      return a.overlap - b.overlap;
+      a.overlap - b.overlap;
     });
 
     for (const collision of collisions) {
@@ -179,8 +196,9 @@ export default class Physics {
         continue;
 
       // Adjust position of player so the block and the player are no longer overlapping
-      let deltaPosition = collision.normal.clone();
-      deltaPosition.multiplyScalar(collision.overlap);
+      let deltaPosition = collision.normal
+        .clone()
+        .multiplyScalar(collision.overlap);
       player.position.add(deltaPosition);
 
       // Negate player's velocity along the collision normal
@@ -194,6 +212,18 @@ export default class Physics {
       // Apply the velocity to the player
       player.applyWorldDeltaVelocity(velocityAdjustment.negate());
     }
+  }
+
+  addCollisionHelper(block) {
+    const blockMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
+    blockMesh.position.copy(block);
+    this.helpers.add(blockMesh);
+  }
+
+  addContactPointHelper(point) {
+    const contactMesh = new THREE.Mesh(contactGeometry, contactMaterial);
+    contactMesh.position.copy(point);
+    this.helpers.add(contactMesh);
   }
 
   /**

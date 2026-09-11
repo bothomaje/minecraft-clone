@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { WorldChunk } from './worldChunk';
 import { DataStore } from './dataStore';
 import { CONFIG } from './app/config';
-import { state } from './app/state';
 
 export class World extends THREE.Group {
   asyncLoading = CONFIG.world.asyncLoading;
@@ -15,69 +14,6 @@ export class World extends THREE.Group {
   constructor(seed = 0) {
     super();
     this.seed = seed;
-
-    document.addEventListener('keydown', (event) => {
-      switch (event.code) {
-        case 'F1':
-          this.save();
-          break;
-        case 'F2':
-          this.load();
-          break;
-      }
-    });
-  }
-
-  /**
-   * Saves the world data to local storage
-   */
-  save() {
-    localStorage.setItem(
-      CONFIG.world.persistenceKeys.params,
-      JSON.stringify(this.params),
-    );
-    localStorage.setItem(
-      CONFIG.world.persistenceKeys.data,
-      JSON.stringify(this.dataStore.data),
-    );
-    state.status = 'Game saved';
-    document.getElementById('status').innerHTML = state.status;
-    setTimeout(() => {
-      state.status = '';
-      document.getElementById('status').innerHTML = state.status;
-    }, 3000);
-  }
-
-  /**
-   * Loads the game from disk
-   */
-  load() {
-    const parameters = localStorage.getItem(
-      CONFIG.world.persistenceKeys.params,
-    );
-    const data = localStorage.getItem(CONFIG.world.persistenceKeys.data);
-
-    if (!parameters || !data) {
-      state.status = 'No game has been saved yet';
-      console.warn(state.status);
-      document.getElementById('status').innerHTML = state.status;
-
-      setTimeout(() => {
-        state.status = '';
-        document.getElementById('status').innerHTML = state.status;
-      }, 3000);
-      return;
-    }
-
-    this.params = JSON.parse(parameters);
-    this.dataStore.data = JSON.parse(data);
-    state.status = 'Game loaded';
-    document.getElementById('status').innerHTML = state.status;
-    setTimeout(() => {
-      state.status = '';
-      document.getElementById('status').innerHTML = state.status;
-    }, 3000);
-    this.generate();
   }
 
   /**

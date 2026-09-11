@@ -83,6 +83,25 @@ export const CONFIG = {
   physics: {
     simulationRate: 200,
     gravity: 32,
+    debug: {
+      enabled: true,
+      collision: {
+        material: {
+          color: 0xff0000,
+          transparent: true,
+          opacity: 0.2,
+        },
+        geometry: 1.001,
+      },
+      contact: {
+        material: { wireframe: true, color: 0x00ff00 },
+        geometry: {
+          radius: 0.05,
+          widthSegments: 6,
+          heightSegments: 6,
+        },
+      },
+    },
   },
   world: {
     asyncLoading: true,
