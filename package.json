@@ -8,10 +8,18 @@
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "lint": "eslint scripts/.",
+    "format": "prettier . --write",
+    "check": "prettier . --check"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
     "gh-pages": "^6.3.0",
+    "globals": "^17.12.0",
+    "prettier": "3.9.6",
     "vite": "^8.0.12"
   },
   "dependencies": {
