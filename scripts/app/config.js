@@ -107,6 +107,7 @@ export const CONFIG = {
     asyncLoading: true,
     drawDistance: 2,
     headroom: 64,
+    regenerateDebounceMs: 200,
     chunkSize: {
       width: 32,
       height: 64,

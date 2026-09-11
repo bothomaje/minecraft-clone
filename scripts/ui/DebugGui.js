@@ -1,5 +1,6 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { resources } from '../objects/blocks/blocksRegistry';
+import { CONFIG } from '../app/config';
 
 export function createDebugGui(scene, world, player) {
   const gui = new GUI();
@@ -87,7 +88,11 @@ export function createDebugGui(scene, world, player) {
   cloudsFolder.add(world.params.clouds, 'scale', 0, 100).name('Cloud Size');
   cloudsFolder.add(world.params.clouds, 'density', 0, 1).name('Cloud Cover');
 
+  let regenerateTimeout = null;
   gui.onChange(() => {
-    world.generate(true);
+    clearTimeout(regenerateTimeout);
+    regenerateTimeout = setTimeout(() => {
+      world.generate(true);
+    }, CONFIG.world.regenerateDebounceMs);
   });
 }

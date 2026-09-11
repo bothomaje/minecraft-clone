@@ -284,18 +284,23 @@ export class Chunk extends THREE.Group {
    */
   generateMeshes() {
     this.clear();
-
     this.generateWater();
+
+    const { width, height } = this.size;
+    const visible = new Uint8Array(width * height * width);
+    const index = (x, y, z) => (x * height + y) * width + z;
 
     // First pass: count how many *visible* instances each block type actually
     // needs in this chunk. Most chunks won't contain most block types at all.
     const counts = {};
-    for (let x = 0; x < this.size.width; x++) {
-      for (let y = 0; y < this.size.height; y++) {
-        for (let z = 0; z < this.size.width; z++) {
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        for (let z = 0; z < width; z++) {
           const blockId = this.getBlock(x, y, z).id;
           if (blockId === blocks.empty.id) continue;
           if (this.isBlockObscured(x, y, z)) continue;
+
+          visible[index(x, y, z)] = 1;
           counts[blockId] = (counts[blockId] || 0) + 1;
         }
       }
@@ -322,14 +327,12 @@ export class Chunk extends THREE.Group {
     }
 
     const matrix = new THREE.Matrix4();
-    for (let x = 0; x < this.size.width; x++) {
-      for (let y = 0; y < this.size.height; y++) {
-        for (let z = 0; z < this.size.width; z++) {
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        for (let z = 0; z < width; z++) {
+          if (!visible[index(x, y, z)]) continue;
+
           const blockId = this.getBlock(x, y, z).id;
-
-          if (blockId === blocks.empty.id) continue;
-          if (this.isBlockObscured(x, y, z)) continue;
-
           const mesh = meshes[blockId];
           const instanceId = mesh.count;
 
@@ -351,9 +354,7 @@ export class Chunk extends THREE.Group {
    * @returns {THREE.InstancedMesh}
    */
   getOrCreateMesh(blockId) {
-    let mesh = this.children.find(
-      (child) => child.userData.blockId === blockId,
-    );
+    let mesh = this.children.find((child) => child.name === blockId);
 
     if (!mesh) {
       const blockType = Object.values(blocks).find(
@@ -366,7 +367,7 @@ export class Chunk extends THREE.Group {
         this.PLACEMENT_HEADROOM,
       );
 
-      mesh.userData.blockId = blockId;
+      mesh.name = blockId;
       mesh.count = 0;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -386,7 +387,7 @@ export class Chunk extends THREE.Group {
   growMesh(mesh) {
     const newCapacity = mesh.instanceMatrix.count + this.PLACEMENT_HEADROOM;
     const blockType = Object.values(blocks).find(
-      (block) => block.id === mesh.userData.blockId,
+      (block) => block.id === Number(mesh.name),
     );
 
     const newMesh = new THREE.InstancedMesh(
@@ -395,7 +396,7 @@ export class Chunk extends THREE.Group {
       newCapacity,
     );
 
-    newMesh.userData.blockId = mesh.userData.blockId;
+    newMesh.name = mesh.name;
     newMesh.castShadow = true;
     newMesh.receiveShadow = true;
 
@@ -479,7 +480,7 @@ export class Chunk extends THREE.Group {
 
     // Get the mesh and instance id of the block
     const mesh = this.children.find(
-      (instanceMesh) => instanceMesh.userData.blockId === block.id,
+      (instanceMesh) => instanceMesh.name === block.id,
     );
 
     if (!mesh) {

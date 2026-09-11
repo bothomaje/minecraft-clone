@@ -187,9 +187,7 @@ export class PhysicsSystem {
    */
   resolveCollisions(collisions, player) {
     // Resolve the collisions in order of the smallest overlap to the largest
-    collisions.sort((a, b) => {
-      a.overlap - b.overlap;
-    });
+    collisions.sort((a, b) => a.overlap - b.overlap);
 
     for (const collision of collisions) {
       if (!this.pointInPlayerBoundingCylinder(collision.contactPoint, player))
