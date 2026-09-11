@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
-import { RNG } from './rng';
-import { blocks, resources } from './blocks';
-import { CONFIG } from './app/config';
+import { RNG } from '../../utils/Rng';
+import { blocks, resources } from '../blocks/blocksRegistry';
+import { CONFIG } from '../../app/config';
+import { getBiome } from './Biome';
 
 const geometry = new THREE.BoxGeometry();
 
-export class WorldChunk extends THREE.Group {
+export class Chunk extends THREE.Group {
   // Extra instance capacity reserved on top of what's needed at generation time,
   // so placing a handful of new blocks doesn't immediately force a mesh resize
-  static PLACEMENT_HEADROOM = CONFIG.world.headroom;
+  PLACEMENT_HEADROOM = CONFIG.world.headroom;
 
   /**
    *
@@ -66,35 +67,6 @@ export class WorldChunk extends THREE.Group {
   }
 
   /**
-   * Get the biome at the world coordinates (x,z)
-   * @param {SimplexNoise} simplex
-   * @param {number} x
-   * @param {number} z
-   */
-  getBiome(simplex, x, z) {
-    // Compute the noise value at this x-z location
-    let noise =
-      0.5 *
-        simplex.noise(
-          (this.position.x + x) / this.params.biomes.scale,
-          (this.position.z + z) / this.params.biomes.scale,
-        ) +
-      0.5;
-
-    noise +=
-      this.params.biomes.variation.amplitude *
-      simplex.noise(
-        (this.position.x + x) / this.params.biomes.variation.scale,
-        (this.position.z + z) / this.params.biomes.variation.scale,
-      );
-
-    if (noise < this.params.biomes.tundraToTemperate) return 'Tundra';
-    else if (noise < this.params.biomes.temperateToJungle) return 'Temperate';
-    else if (noise < this.params.biomes.jungleToDesert) return 'Jungle';
-    else return 'Desert';
-  }
-
-  /**
    * Generates the terrain data for the world
    */
   generateTerrain(rng) {
@@ -102,7 +74,14 @@ export class WorldChunk extends THREE.Group {
 
     for (let x = 0; x < this.size.width; x++) {
       for (let z = 0; z < this.size.width; z++) {
-        const biome = this.getBiome(simplex, x, z);
+        const biome = getBiome(
+          simplex,
+          this.position.x,
+          this.position.z,
+          x,
+          z,
+          this.params,
+        );
 
         // Compute the noise value at this x-z location
         const value = simplex.noise(
@@ -328,7 +307,7 @@ export class WorldChunk extends THREE.Group {
     for (const blockIdStr of Object.keys(counts)) {
       const blockId = Number(blockIdStr);
       const blockType = Object.values(blocks).find((b) => b.id === blockId);
-      const capacity = counts[blockId] + WorldChunk.PLACEMENT_HEADROOM;
+      const capacity = counts[blockId] + this.PLACEMENT_HEADROOM;
 
       const mesh = new THREE.InstancedMesh(
         geometry,
@@ -372,19 +351,26 @@ export class WorldChunk extends THREE.Group {
    * @returns {THREE.InstancedMesh}
    */
   getOrCreateMesh(blockId) {
-    let mesh = this.children.find((child) => child.name === blockId);
+    let mesh = this.children.find(
+      (child) => child.userData.blockId === blockId,
+    );
 
     if (!mesh) {
-      const blockType = Object.values(blocks).find((b) => b.id === blockId);
+      const blockType = Object.values(blocks).find(
+        (block) => block.id === blockId,
+      );
+
       mesh = new THREE.InstancedMesh(
         geometry,
         blockType.material,
-        WorldChunk.PLACEMENT_HEADROOM,
+        this.PLACEMENT_HEADROOM,
       );
-      mesh.name = blockId;
+
+      mesh.userData.blockId = blockId;
       mesh.count = 0;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+
       this.add(mesh);
     }
 
@@ -398,10 +384,9 @@ export class WorldChunk extends THREE.Group {
    * @returns {THREE.InstancedMesh}
    */
   growMesh(mesh) {
-    const newCapacity =
-      mesh.instanceMatrix.count + WorldChunk.PLACEMENT_HEADROOM;
+    const newCapacity = mesh.instanceMatrix.count + this.PLACEMENT_HEADROOM;
     const blockType = Object.values(blocks).find(
-      (b) => b.id === Number(mesh.name),
+      (block) => block.id === mesh.userData.blockId,
     );
 
     const newMesh = new THREE.InstancedMesh(
@@ -409,7 +394,8 @@ export class WorldChunk extends THREE.Group {
       blockType.material,
       newCapacity,
     );
-    newMesh.name = mesh.name;
+
+    newMesh.userData.blockId = mesh.userData.blockId;
     newMesh.castShadow = true;
     newMesh.receiveShadow = true;
 
@@ -493,8 +479,13 @@ export class WorldChunk extends THREE.Group {
 
     // Get the mesh and instance id of the block
     const mesh = this.children.find(
-      (instanceMesh) => instanceMesh.name === block.id,
+      (instanceMesh) => instanceMesh.userData.blockId === block.id,
     );
+
+    if (!mesh) {
+      throw new Error(`Could not find InstancedMesh for block ${block.id}`);
+    }
+
     const instanceId = block.instanceId;
 
     // Swapping the transformation matrix of the block in the last position
@@ -538,6 +529,16 @@ export class WorldChunk extends THREE.Group {
       let mesh = this.getOrCreateMesh(block.id);
       if (mesh.count >= mesh.instanceMatrix.count) {
         mesh = this.growMesh(mesh);
+      }
+
+      if (mesh.count >= mesh.instanceMatrix.count) {
+        mesh = this.growMesh(mesh);
+      }
+
+      if (mesh.count >= mesh.instanceMatrix.count) {
+        throw new Error(
+          `InstancedMesh capacity exceeded: ${mesh.count}/${mesh.instanceMatrix.count}`,
+        );
       }
 
       const instanceId = mesh.count++;

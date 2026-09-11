@@ -1,15 +1,19 @@
 import * as THREE from 'three';
-import { WorldChunk } from './worldChunk';
-import { DataStore } from './dataStore';
-import { CONFIG } from './app/config';
+import { Chunk } from './Chunk';
+import { DataStore } from '../../utils/DataStore';
+import { CONFIG } from '../../app/config';
 
 export class World extends THREE.Group {
   asyncLoading = CONFIG.world.asyncLoading;
   drawDistance = CONFIG.world.drawDistance;
   chunkSize = CONFIG.world.chunkSize;
   params = CONFIG.world.params;
-
   dataStore = new DataStore();
+  chunksMap = new Map();
+
+  static chunkKey(x, z) {
+    return `${x},${z}`;
+  }
 
   constructor(seed = 0) {
     super();
@@ -23,24 +27,11 @@ export class World extends THREE.Group {
     if (clearCache) {
       this.dataStore.clear();
     }
-
     this.disposeChunks();
 
     for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
       for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
-        const chunk = new WorldChunk(
-          this.chunkSize,
-          this.params,
-          this.dataStore,
-        );
-        chunk.position.set(
-          x * this.chunkSize.width,
-          0,
-          z * this.chunkSize.width,
-        );
-        chunk.generate();
-        chunk.userData = { x, z };
-        this.add(chunk);
+        this.generateChunk(x, z);
       }
     }
   }
@@ -102,13 +93,9 @@ export class World extends THREE.Group {
    */
   getChunksToAdd(visibleChunks) {
     // Filter down the visible chunks to those not already in the world
-    return visibleChunks.filter((chunk) => {
-      const chunkExists = this.children
-        .map((obj) => obj.userData)
-        .find(({ x, z }) => chunk.x === x && chunk.z === z);
-
-      return !chunkExists;
-    });
+    return visibleChunks.filter(
+      ({ x, z }) => !this.chunksMap.has(World.chunkKey(x, z)),
+    );
   }
 
   /**
@@ -116,19 +103,16 @@ export class World extends THREE.Group {
    * @param {{ x: number, z: number }[]} visibleChunks
    */
   removeUnusedChunks(visibleChunks) {
-    // Filter down the visible chunks to those not already in the world
-    const chunksToRemove = this.children.filter((chunk) => {
-      const { x, z } = chunk.userData;
-      const chunkExists = visibleChunks.find(
-        (visibleChunk) => visibleChunk.x === x && visibleChunk.z === z,
-      );
+    const visibleKeys = new Set(
+      visibleChunks.map(({ x, z }) => World.chunkKey(x, z)),
+    );
 
-      return !chunkExists;
-    });
-
-    for (const chunk of chunksToRemove) {
-      chunk.disposeInstances();
-      this.remove(chunk);
+    for (const [key, chunk] of this.chunksMap) {
+      if (!visibleKeys.has(key)) {
+        chunk.disposeInstances();
+        this.remove(chunk);
+        this.chunksMap.delete(key);
+      }
     }
   }
 
@@ -138,9 +122,12 @@ export class World extends THREE.Group {
    * @param {number} z
    */
   generateChunk(x, z) {
-    const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
+    const chunk = new Chunk(this.chunkSize, this.params, this.dataStore);
     chunk.position.set(x * this.chunkSize.width, 0, z * this.chunkSize.width);
     chunk.userData = { x, z };
+
+    this.chunksMap.set(World.chunkKey(x, z), chunk);
+    this.add(chunk);
 
     if (this.asyncLoading) {
       // Load chunk asynchronously
@@ -148,8 +135,6 @@ export class World extends THREE.Group {
     } else {
       chunk.generate();
     }
-
-    this.add(chunk);
   }
 
   /**
@@ -207,17 +192,14 @@ export class World extends THREE.Group {
    * @returns {WorldChunk | null}
    */
   getChunk(chunkX, chunkZ) {
-    return this.children.find(
-      (chunk) => chunk.userData.x === chunkX && chunk.userData.z === chunkZ,
-    );
+    return this.chunksMap.get(World.chunkKey(chunkX, chunkZ));
   }
 
   disposeChunks() {
-    this.traverse((chunk) => {
-      if (chunk.disposeInstances) {
-        chunk.disposeInstances();
-      }
-    });
+    for (const chunk of this.chunksMap.values()) {
+      chunk.disposeInstances();
+    }
+    this.chunksMap.clear();
     this.clear();
   }
 

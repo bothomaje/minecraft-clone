@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { blocks } from './blocks';
-import { Tool } from './tool';
-import { CONFIG } from './app/config';
-import { state } from './app/state';
-import { createPlayerCamera } from './scene/camera';
+import { blocks } from '../blocks/blocksRegistry';
+import { Tool } from './Tool';
+import { CONFIG } from '../../app/config';
+import { state } from '../../app/state';
+import { createPlayerCamera } from '../../scene/camera';
 
 const CENTRE_SCREEN = new THREE.Vector2();
 

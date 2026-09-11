@@ -1,6 +1,6 @@
 import { CONFIG } from '../app/config';
 import { state } from '../app/state';
-import { blocks } from '../blocks';
+import { blocks } from '../objects/blocks/blocksRegistry';
 
 export class InputSystem {
   constructor(player) {

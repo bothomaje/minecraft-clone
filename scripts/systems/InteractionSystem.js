@@ -1,5 +1,5 @@
 import { state } from '../app/state';
-import { blocks } from '../blocks';
+import { blocks } from '../objects/blocks/blocksRegistry';
 
 export class InteractionSystem {
   constructor(player, world) {

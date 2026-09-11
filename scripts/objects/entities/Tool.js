@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CONFIG } from './app/config';
+import { CONFIG } from '../../app/config';
 
 export class Tool extends THREE.Group {
   animate = false;

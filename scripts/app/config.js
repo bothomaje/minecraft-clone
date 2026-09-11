@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { blocks } from '../blocks';
+import { blocks } from '../objects/blocks/blocksRegistry';
 
 export const CONFIG = {
   renderer: {

@@ -1,5 +1,5 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { resources } from './blocks';
+import { resources } from './objects/blocks/blocksRegistry';
 
 export function createUI(scene, world, player) {
   const gui = new GUI();
