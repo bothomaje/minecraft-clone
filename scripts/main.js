@@ -2,7 +2,7 @@ import { CONFIG } from './app/config';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './objects/world/world';
-import { createUI } from './ui';
+import { createDebugGui } from './ui/DebugGui';
 import { Player } from './objects/entities/Player';
 import { ModelLoader } from './loaders/ModelLoader';
 import { SceneManager } from './scene/SceneManager';
@@ -13,6 +13,7 @@ import { InteractionSystem } from './systems/InteractionSystem';
 import { InputSystem } from './systems/InputSystem';
 import { PersistenceSystem } from './systems/PersistenceSystem';
 import { PhysicsSystem } from './systems/PhysicsSystem';
+import { Hud } from './ui/Hud';
 
 // Stats display setup
 const stats = new Stats();
@@ -45,6 +46,7 @@ modelLoader.loadModels((models) => {
 });
 
 const lighting = new Lighting(scene);
+const hud = new Hud();
 
 // Systems setup
 const physics = new PhysicsSystem(scene);
@@ -62,6 +64,8 @@ function animate() {
 
   requestAnimationFrame(animate);
 
+  hud.update();
+
   if (player.controls.isLocked) {
     player.update(world);
     physics.update(dt, player, world);
@@ -78,5 +82,5 @@ function animate() {
   previousTime = currentTime;
 }
 
-createUI(scene, world, player);
+createDebugGui(scene, world, player);
 animate();

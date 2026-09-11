@@ -127,8 +127,6 @@ export class Player {
       this.position.y += this.velocity.y * dt;
 
       this.updatePositionDisplay();
-      document.getElementById('player-position').innerHTML =
-        state.playerPosition;
     }
   }
 

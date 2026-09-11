@@ -50,15 +50,13 @@ export class PersistenceSystem {
     this.world.params = JSON.parse(parameters);
     this.world.dataStore.data = JSON.parse(data);
     this.showMessage('Game loaded');
-    this.generate();
+    this.world.generate();
   }
 
   showMessage(message) {
     state.status = message;
-    document.getElementById('status').innerHTML = state.status;
     setTimeout(() => {
       state.status = '';
-      document.getElementById('status').innerHTML = state.status;
     }, 3000);
   }
 }

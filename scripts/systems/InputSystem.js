@@ -28,13 +28,7 @@ export class InputSystem {
       case 'Digit6':
       case 'Digit7':
       case 'Digit8':
-        document
-          .getElementById(`toolbar-${state.activeBlockId}`)
-          .classList.remove('selected');
         state.activeBlockId = CONFIG.toolbar.slots[Number(event.key)];
-        document
-          .getElementById(`toolbar-${state.activeBlockId}`)
-          .classList.add('selected');
         this.player.tool.visible = state.activeBlockId === blocks.empty.id;
         break;
       case 'KeyW':
