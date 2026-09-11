@@ -4,6 +4,7 @@ import { blocks } from './blocks';
 import { Tool } from './tool';
 import { CONFIG } from './app/config';
 import { state } from './app/state';
+import { createPlayerCamera } from './scene/camera';
 
 const CENTRE_SCREEN = new THREE.Vector2();
 
@@ -18,12 +19,7 @@ export class Player {
   velocity = new THREE.Vector3();
   #worldVelocity = new THREE.Vector3();
 
-  camera = new THREE.PerspectiveCamera(
-    CONFIG.player.camera.fov,
-    window.innerWidth / window.innerHeight,
-    CONFIG.player.camera.near,
-    CONFIG.player.camera.far,
-  );
+  camera = createPlayerCamera();
   controls = new PointerLockControls(this.camera, document.body);
 
   raycaster = new THREE.Raycaster(
@@ -41,7 +37,6 @@ export class Player {
    */
   constructor(scene) {
     this.camera.position.copy(CONFIG.player.position);
-    this.camera.layers.enable(1);
     scene.add(this.camera);
 
     this.camera.add(this.tool);

@@ -9,41 +9,24 @@ import Physics from './physics';
 import { blocks } from './blocks';
 import { ModelLoader } from './modelLoader';
 import { state } from './app/state';
+import { SceneManager } from './scene/SceneManager';
+import { createOrbitCamera } from './scene/camera';
+import { Lighting } from './scene/Lighting';
+import { ResizeSystem } from './systems/ResizeSystem';
 
 // Stats display setup
 const stats = new Stats();
 document.body.append(stats.dom);
 
-// Renderer setup
-const renderer = new THREE.WebGLRenderer();
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(CONFIG.renderer.clearColour);
-renderer.shadowMap.enabled = CONFIG.renderer.shadowMap.enabled;
-renderer.shadowMap.type = CONFIG.renderer.shadowMap.type;
-document.body.appendChild(renderer.domElement);
-
-// Camera setup
-const orbitCamera = new THREE.PerspectiveCamera(
-  CONFIG.camera.orbit.fov,
-  window.innerWidth / window.innerHeight,
-);
-orbitCamera.position.copy(CONFIG.camera.orbit.position);
-orbitCamera.layers.enable(1);
+const { scene, renderer } = new SceneManager();
+const orbitCamera = createOrbitCamera();
 
 // Controls setup
 const controls = new OrbitControls(orbitCamera, renderer.domElement);
-
-// Scene setup
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(
-  CONFIG.scene.fog.colour,
-  CONFIG.scene.fog.near,
-  CONFIG.scene.fog.far,
-);
+controls.target.copy(CONFIG.player.position);
+controls.update();
 
 const world = new World();
-
 world.generate();
 scene.add(world);
 
@@ -54,10 +37,6 @@ orbitCamera.position.set(
   player.position.y + 8,
   player.position.z - 16,
 );
-controls.target.copy(player.position);
-controls.update();
-// orbitCamera.target.copy(player.position);
-// orbitCamera.update();
 orbitCamera.lookAt(player.position);
 
 const modelLoader = new ModelLoader();
@@ -66,30 +45,8 @@ modelLoader.loadModels((models) => {
 });
 
 const physics = new Physics();
-
-// Lights setup
-const sun = new THREE.DirectionalLight();
-
-function setupLights() {
-  sun.intensity = CONFIG.lighting.sun.intensity;
-  sun.position.copy(CONFIG.lighting.sun.position);
-  sun.castShadow = CONFIG.lighting.sun.castShadow;
-  sun.shadow.camera.left = CONFIG.lighting.sun.left;
-  sun.shadow.camera.right = CONFIG.lighting.sun.right;
-  sun.shadow.camera.bottom = CONFIG.lighting.sun.bottom;
-  sun.shadow.camera.top = CONFIG.lighting.sun.top;
-  sun.shadow.camera.near = CONFIG.lighting.sun.near;
-  sun.shadow.camera.far = CONFIG.lighting.sun.far;
-  sun.shadow.bias = CONFIG.lighting.sun.bias;
-  sun.shadow.normalBias = CONFIG.lighting.sun.normalBias;
-  sun.shadow.mapSize = new THREE.Vector2(2048, 2048);
-  scene.add(sun);
-  scene.add(sun.target);
-
-  const ambient = new THREE.AmbientLight();
-  ambient.intensity = CONFIG.lighting.ambient.intensity;
-  scene.add(ambient);
-}
+const lighting = new Lighting(scene);
+new ResizeSystem(renderer, [orbitCamera, player.camera]);
 
 function onMouseDown() {
   if (player.controls.isLocked && player.selectedCoords) {
@@ -125,10 +82,7 @@ function animate() {
     player.update(world);
     physics.update(dt, player, world);
     world.update(player);
-
-    sun.position.copy(player.position);
-    sun.position.sub(new THREE.Vector3(-50, -50, -50));
-    sun.target.position.copy(player.position);
+    lighting.update(player);
   }
 
   renderer.render(
@@ -140,14 +94,5 @@ function animate() {
   previousTime = currentTime;
 }
 
-window.addEventListener('resize', () => {
-  orbitCamera.aspect = window.innerWidth / window.innerHeight;
-  orbitCamera.updateProjectionMatrix();
-  player.camera.aspect = window.innerWidth / window.innerHeight;
-  player.camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-setupLights();
 createUI(scene, world, player);
 animate();

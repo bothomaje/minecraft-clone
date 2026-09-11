@@ -14,6 +14,11 @@ export const CONFIG = {
       fov: 75,
       position: new THREE.Vector3(-20, 20, -20),
     },
+    player: {
+      fov: 70,
+      near: 0.1,
+      far: 200,
+    },
   },
   controls: {
     target: new THREE.Vector3(16, 16, 16),
@@ -51,7 +56,6 @@ export const CONFIG = {
     height: 1.75,
     jumpSpeed: 10,
     maxSpeed: 10,
-    camera: { fov: 70, near: 0.1, far: 200 },
     raycaster: { near: 0, far: 3 },
     position: new THREE.Vector3(32, 16, 32),
     selectionHelper: {
