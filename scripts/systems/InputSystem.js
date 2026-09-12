@@ -28,8 +28,9 @@ export class InputSystem {
       case 'Digit6':
       case 'Digit7':
       case 'Digit8':
-        state.activeBlockId = CONFIG.toolbar.slots[Number(event.key)];
-        this.player.tool.visible = state.activeBlockId === blocks.empty.id;
+        state.activeSlot = Number(event.key);
+        state.activeBlock = CONFIG.toolbar.slots[state.activeSlot];
+        this.player.tool.visible = state.activeBlock.id === blocks.empty.id;
         break;
       case 'KeyW':
         this.player.input.z = this.player.maxSpeed;

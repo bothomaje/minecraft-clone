@@ -1,7 +1,8 @@
-import { blocks } from '../objects/blocks/blocksRegistry';
+import { CONFIG } from './config';
 
 export const state = {
-  activeBlockId: blocks.empty.id,
+  activeSlot: 0,
+  activeBlock: CONFIG.toolbar.slots[0],
   status: '',
   playerPosition: '',
 };

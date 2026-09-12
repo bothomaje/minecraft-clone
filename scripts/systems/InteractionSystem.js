@@ -11,7 +11,7 @@ export class InteractionSystem {
 
   onMouseDown() {
     if (this.player.controls.isLocked && this.player.selectedCoords) {
-      if (state.activeBlockId === blocks.empty.id) {
+      if (state.activeBlock.id === blocks.empty.id) {
         this.world.removeBlock(
           this.player.selectedCoords.x,
           this.player.selectedCoords.y,
@@ -19,11 +19,12 @@ export class InteractionSystem {
         );
         this.player.tool.startAnimation();
       } else {
+        console.log(`Add adding block type ${state.activeBlockId}`);
         this.world.addBlock(
           this.player.selectedCoords.x,
           this.player.selectedCoords.y,
           this.player.selectedCoords.z,
-          state.activeBlockId,
+          state.activeBlock,
         );
       }
     }

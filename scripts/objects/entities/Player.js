@@ -98,7 +98,7 @@ export class Player {
       this.selectedCoords = chunk.position.clone();
       this.selectedCoords.applyMatrix4(blockMatrix);
 
-      if (state.activeBlockId !== blocks.empty.id) {
+      if (state.activeBlock.id !== blocks.empty.id) {
         this.selectedCoords.add(intersection.normal);
       }
       this.selectionHelper.position.copy(this.selectedCoords);

@@ -1,7 +1,7 @@
 import { state } from '../app/state';
 
 export class Hud {
-  #lastActiveBlockId = null;
+  #lastActiveSlot = null;
 
   constructor() {
     this.position = document.getElementById('player-position');
@@ -12,18 +12,16 @@ export class Hud {
     this.position.innerHTML = state.playerPosition;
     this.status.innerHTML = state.status;
 
-    if (state.activeBlockId != this.#lastActiveBlockId) {
-      this.#updateToolbarSelection(state.activeBlockId);
-      this.#lastActiveBlockId = state.activeBlockId;
+    if (state.activeSlot != this.#lastActiveSlot) {
+      this.#updateToolbarSelection(state.activeSlot);
+      this.#lastActiveSlot = state.activeSlot;
     }
   }
 
-  #updateToolbarSelection(activeBlockId) {
+  #updateToolbarSelection(slotIndex) {
     document.querySelectorAll('.toolbar-icon.selected').forEach((icon) => {
       icon.classList.remove('selected');
     });
-    document
-      .getElementById(`toolbar-${activeBlockId}`)
-      .classList.add('selected');
+    document.getElementById(`toolbar-${slotIndex}`).classList.add('selected');
   }
 }

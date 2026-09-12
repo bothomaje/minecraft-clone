@@ -14,13 +14,16 @@ export class DataStore {
 
   get(chunkX, chunkZ, blockX, blockY, blockZ) {
     const key = this.getKey(chunkX, chunkZ, blockX, blockY, blockZ);
-    const blockId = this.data[key];
-    return blockId;
+    const value = this.data[key];
+
+    if (value === undefined) return undefined;
+
+    return typeof value === 'number' ? { id: value, state: null } : value;
   }
 
-  set(chunkX, chunkZ, blockX, blockY, blockZ, blockId) {
+  set(chunkX, chunkZ, blockX, blockY, blockZ, value) {
     const key = this.getKey(chunkX, chunkZ, blockX, blockY, blockZ);
-    this.data[key] = blockId;
+    this.data[key] = value;
   }
 
   getKey(chunkX, chunkZ, blockX, blockY, blockZ) {

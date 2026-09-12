@@ -12,7 +12,7 @@ function loadTexture(path) {
 
 export const textures = {
   dirt: loadTexture('textures/block/dirt.png'),
-  grass: {
+  grassBlock: {
     top: loadTexture('textures/block/grass_block_top.png'),
     side: loadTexture('textures/block/grass_block_side.png'),
   },

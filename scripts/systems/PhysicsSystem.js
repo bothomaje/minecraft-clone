@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { blocks } from '../objects/blocks/blocksRegistry';
 import { CONFIG } from '../app/config';
+import { blocksById } from '../objects/blocks/blocksRegistry';
 
 const collisionMaterial = new THREE.MeshBasicMaterial(
   CONFIG.physics.debug.collision.material,
@@ -39,7 +39,7 @@ export class PhysicsSystem {
    * Moves the physics simulation forward in time by 'dt'
    * @param {number} dt
    * @param {Player} player
-   * @param {WorldChunk} world
+   * @param {Chunk} world
    */
   update(dt, player, world) {
     this.accumulator += dt;
@@ -58,7 +58,7 @@ export class PhysicsSystem {
   /**
    * Main function for collision detection
    * @param {Player} player
-   * @param {WorldChunk} world
+   * @param {Chunk} world
    */
   detectCollisions(player, world) {
     player.onGround = false;
@@ -75,7 +75,7 @@ export class PhysicsSystem {
    * Performs a rough search against the world to return all
    * possible blocks the player may be colliding with
    * @param {Player} player
-   * @param {WorldChunk} world
+   * @param {Chunk} world
    * @returns {[]}
    */
   broadPhase(player, world) {
@@ -103,7 +103,7 @@ export class PhysicsSystem {
       for (let y = extents.y.min; y <= extents.y.max; y++) {
         for (let z = extents.z.min; z <= extents.z.max; z++) {
           const block = world.getBlock(x, y, z);
-          if (block && block.id !== blocks.empty.id) {
+          if (block && blocksById.get(block.id)?.solid) {
             const blockPos = { x, y, z };
             candidates.push(blockPos);
             if (CONFIG.physics.debug.enabled) this.addCollisionHelper(blockPos);

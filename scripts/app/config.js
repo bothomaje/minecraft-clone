@@ -57,7 +57,7 @@ export const CONFIG = {
     jumpSpeed: 10,
     maxSpeed: 10,
     raycaster: { near: 0, far: 3 },
-    position: new THREE.Vector3(32, 16, 32),
+    position: new THREE.Vector3(32, 12, 32),
     selectionHelper: {
       geometry: 1.01,
       material: {
@@ -109,8 +109,9 @@ export const CONFIG = {
     headroom: 64,
     regenerateDebounceMs: 200,
     chunkSize: {
-      width: 32,
-      height: 64,
+      width: 16,
+      minY: -32,
+      maxY: 32,
     },
     params: {
       seed: 0,
@@ -140,7 +141,7 @@ export const CONFIG = {
           maxRadius: 3,
           density: 0.5, // varies between 0.0 and 1.0
         },
-        frequency: 0.005,
+        frequency: 0.02,
       },
       clouds: {
         scale: 30,
@@ -162,15 +163,15 @@ export const CONFIG = {
   },
   toolbar: {
     slots: [
-      blocks.empty.id,
-      blocks.grass.id,
-      blocks.dirt.id,
-      blocks.stone.id,
-      blocks.coalOre.id,
-      blocks.ironOre.id,
-      blocks.tree.id,
-      blocks.leaves.id,
-      blocks.sand.id,
+      blocks.empty,
+      blocks.grassBlock,
+      blocks.dirt,
+      blocks.stone,
+      blocks.coalOre,
+      blocks.ironOre,
+      blocks.oakLog,
+      blocks.oakLeaves,
+      blocks.sand,
     ],
   },
 };

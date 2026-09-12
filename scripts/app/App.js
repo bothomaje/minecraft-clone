@@ -3,7 +3,7 @@ import { SceneManager } from '../scene/SceneManager';
 import { createOrbitCamera } from '../scene/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { CONFIG } from './config';
-import { World } from '../objects/world/world';
+import { World } from '../objects/world/World';
 import { Player } from '../objects/entities/Player';
 import { ModelLoader } from '../loaders/ModelLoader';
 import { Lighting } from '../scene/Lighting';
