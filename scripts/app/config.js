@@ -67,11 +67,22 @@ export const CONFIG = {
       },
     },
     placement: 0x88ff88,
+    crackHelper: {
+      geometry: 1.02,
+      material: {
+        transparent: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
+        polygonOffsetUnits: -4,
+      },
+    },
   },
   mining: {
     secondsPerHardness: 1,
     correctToolMultiplier: 4,
     wrongToolMultiplier: 1,
+    soundTickInterval: 0.25,
+    stages: 10,
   },
   tool: {
     animation: {
@@ -115,8 +126,8 @@ export const CONFIG = {
     headroom: 64,
     regenerateDebounceMs: 200,
     chunkSize: {
-      width: 8,
-      minY: -32,
+      width: 16,
+      minY: -8,
       maxY: 32,
     },
     params: {

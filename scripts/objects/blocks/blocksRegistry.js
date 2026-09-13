@@ -9,6 +9,24 @@ const BlockCategory = {
   NON_SOLID: 'non_solid',
 };
 
+function getSoundSet(blockName) {
+  return {
+    place: `sounds/block/${blockName}/place.ogg`,
+    break: `sounds/block/${blockName}/break.ogg`,
+    broken: `sounds/block/${blockName}/broken.ogg`,
+  };
+}
+
+const sounds = {
+  dirt: getSoundSet('dirt'),
+  grass: getSoundSet('grass'),
+  sand: getSoundSet('sand'),
+  snow: getSoundSet('snow'),
+  stone: getSoundSet('stone'),
+  wood: getSoundSet('wood'),
+  wool: getSoundSet('wool'),
+};
+
 export const blocks = {
   empty: {
     id: 0,
@@ -31,6 +49,7 @@ export const blocks = {
     scale: { x: 30, y: 30, z: 30 },
     scarcity: 0.5,
     material: new THREE.MeshLambertMaterial({ map: textures.stone }),
+    sounds: sounds.stone,
   },
   grassBlock: {
     id: 2,
@@ -52,6 +71,7 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // front
       new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // back
     ],
+    sounds: sounds.grass,
   },
   dirt: {
     id: 3,
@@ -63,6 +83,7 @@ export const blocks = {
     gravity: false,
     color: 0x807020,
     material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
+    sounds: sounds.dirt,
   },
   cloud: {
     id: 9,
@@ -82,6 +103,7 @@ export const blocks = {
     hardness: 0.5,
     gravity: true,
     material: new THREE.MeshLambertMaterial({ map: textures.sand }),
+    sounds: sounds.sand,
   },
   ironOre: {
     id: 15,
@@ -95,6 +117,7 @@ export const blocks = {
     hardness: 3,
     requiredTool: 'stonePickaxe',
     material: new THREE.MeshLambertMaterial({ map: textures.ore.iron }),
+    sounds: sounds.stone,
   },
   coalOre: {
     id: 16,
@@ -108,6 +131,7 @@ export const blocks = {
     hardness: 3,
     requiredTool: 'pickaxe',
     material: new THREE.MeshLambertMaterial({ map: textures.ore.coal }),
+    sounds: sounds.stone,
   },
   oakLog: {
     id: 17,
@@ -124,6 +148,7 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
       new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
     ],
+    sounds: sounds.wood,
   },
   oakLeaves: {
     id: 18,
@@ -137,6 +162,7 @@ export const blocks = {
       map: textures.leaves.oak,
       color: 0x79c05a,
     }),
+    sounds: sounds.grass,
   },
   snow: {
     id: 80,
@@ -146,6 +172,7 @@ export const blocks = {
     opaque: true,
     hardness: 0.2,
     material: new THREE.MeshLambertMaterial({ map: textures.snow }),
+    sounds: sounds.snow,
   },
   cactus: {
     id: 81,
@@ -162,6 +189,7 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
       new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
     ],
+    sounds: sounds.wool,
   },
   jungleLog: {
     id: -571,
@@ -179,6 +207,7 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
       new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
     ],
+    sounds: sounds.wood,
   },
   jungleLeaves: {
     id: -572,
@@ -191,6 +220,7 @@ export const blocks = {
       map: textures.leaves.jungle,
       color: 0x79c05a,
     }),
+    sounds: sounds.grass,
   },
 };
 

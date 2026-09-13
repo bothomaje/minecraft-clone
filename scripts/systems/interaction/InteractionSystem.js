@@ -13,9 +13,10 @@ export class InteractionSystem {
     return `${pos.x},${pos.y},${pos.z}`;
   }
 
-  constructor(player, world) {
+  constructor(player, world, sounds) {
     this.player = player;
     this.world = world;
+    this.sounds = sounds;
 
     document.addEventListener('mousedown', this.onMouseDown.bind(this));
     document.addEventListener('mouseup', this.onMouseUp.bind(this));
@@ -76,11 +77,23 @@ export class InteractionSystem {
           1,
         );
 
+        if (
+          this.mining.elapsed - this.mining.lastSoundTick >=
+          CONFIG.mining.soundTickInterval
+        ) {
+          this.sounds?.play(this.mining.blockType, 'break');
+          this.player.tool.startAnimation();
+          this.mining.lastSoundTick = this.mining.elapsed;
+        }
+
         this.player.showSelection(
           pos,
           CONFIG.player.selectionHelper.material.color,
-          1, // - progress * 0.35,
+          1,
         );
+
+        const stage = Math.floor(progress * CONFIG.mining.stages);
+        this.player.showCrack(pos, stage);
 
         if (progress >= 1) {
           this.finishMining();
@@ -114,6 +127,7 @@ export class InteractionSystem {
       blockType,
       elapsed: 0,
       requiredTime: this.getMiningTime(blockType),
+      lastSoundTick: 0,
     };
   }
 
@@ -123,11 +137,14 @@ export class InteractionSystem {
     this.world.removeBlock(position.x, position.y, position.z);
     this.player.tool.startAnimation();
     this.handleDrops(blockType);
+    this.sounds?.play(blockType, 'broken');
+    this.player.hideCrack();
     this.mining = null;
   }
 
   cancelMining() {
     this.mining = null;
+    this.player.hideCrack();
   }
 
   getMiningTime(block) {
@@ -176,6 +193,8 @@ export class InteractionSystem {
       state.activeBlock,
       placementState,
     );
+
+    this.sounds?.play(state.activeBlock, 'place');
   }
 
   getPlacementState(block, normal) {

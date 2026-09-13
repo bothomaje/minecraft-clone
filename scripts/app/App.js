@@ -14,6 +14,7 @@ import { InputSystem } from '../systems/InputSystem';
 import { InteractionSystem } from '../systems/interaction/InteractionSystem';
 import { PersistenceSystem } from '../systems/PersistenceSystem';
 import { createDebugGui } from '../ui/DebugGui';
+import { SoundManager } from '../loaders/SoundManager';
 
 export class App {
   stats = new Stats();
@@ -56,9 +57,14 @@ export class App {
     this.hud = new Hud();
 
     this.physics = new PhysicsSystem(scene);
+    this.sounds = new SoundManager(this.player.listener);
+    this.interaction = new InteractionSystem(
+      this.player,
+      this.world,
+      this.sounds,
+    );
     new ResizeSystem(renderer, [this.orbitCamera, this.player.camera]);
     new InputSystem(this.player);
-    this.interaction = new InteractionSystem(this.player, this.world);
     new PersistenceSystem(this.world);
   }
 

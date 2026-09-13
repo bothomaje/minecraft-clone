@@ -4,6 +4,7 @@ import { Tool } from './Tool';
 import { CONFIG } from '../../app/config';
 import { state } from '../../app/state';
 import { createPlayerCamera } from '../../scene/camera';
+import { textures } from '../../loaders/TextureManager';
 
 export class Player {
   radius = CONFIG.player.radius;
@@ -20,6 +21,7 @@ export class Player {
   controls = new PointerLockControls(this.camera, document.body);
 
   tool = new Tool();
+  listener = new THREE.AudioListener();
 
   /**
    * @param {THREE.Scene} scene
@@ -29,6 +31,7 @@ export class Player {
     scene.add(this.camera);
 
     this.camera.add(this.tool);
+    this.camera.add(this.listener);
 
     const selectionMaterial = new THREE.MeshBasicMaterial(
       CONFIG.player.selectionHelper.material,
@@ -40,6 +43,18 @@ export class Player {
     );
     this.selectionHelper = new THREE.Mesh(selectionGeometry, selectionMaterial);
     scene.add(this.selectionHelper);
+
+    const crackMaterial = new THREE.MeshBasicMaterial(
+      CONFIG.player.crackHelper.material,
+    );
+    const crackGeometry = new THREE.BoxGeometry(
+      CONFIG.player.crackHelper.geometry,
+      CONFIG.player.crackHelper.geometry,
+      CONFIG.player.crackHelper.geometry,
+    );
+    this.crackHelper = new THREE.Mesh(crackGeometry, crackMaterial);
+    this.crackHelper.visible = false;
+    scene.add(this.crackHelper);
   }
 
   /**
@@ -72,6 +87,23 @@ export class Player {
 
   hideSelection() {
     this.selectionHelper.visible = false;
+  }
+
+  showCrack(position, stage) {
+    const clampedStage = Math.max(
+      0,
+      Math.min(stage, textures.breaking.length - 1),
+    );
+    this.crackHelper.position.copy(position);
+    if (this.crackHelper.material.map !== textures.breaking[clampedStage]) {
+      this.crackHelper.material.map = textures.breaking[clampedStage];
+      this.crackHelper.material.needsUpdate = true;
+    }
+    this.crackHelper.visible = true;
+  }
+
+  hideCrack() {
+    this.crackHelper.visible = false;
   }
 
   /**

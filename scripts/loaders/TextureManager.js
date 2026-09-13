@@ -11,6 +11,9 @@ function loadTexture(path) {
 }
 
 export const textures = {
+  breaking: Array.from({ length: 10 }, (_, stage) =>
+    loadTexture(`textures/block/breaking/destroy_stage_${stage}.png`),
+  ),
   dirt: loadTexture('textures/block/dirt.png'),
   grassBlock: {
     top: loadTexture('textures/block/grass_block_top.png'),
