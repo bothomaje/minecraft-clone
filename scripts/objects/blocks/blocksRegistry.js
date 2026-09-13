@@ -26,6 +26,7 @@ export const blocks = {
     opaque: true,
     hardness: 1.5,
     gravity: false,
+    requiredTool: 'pickaxe',
     color: 0x808080,
     scale: { x: 30, y: 30, z: 30 },
     scarcity: 0.5,
@@ -92,6 +93,7 @@ export const blocks = {
     solid: true,
     opaque: true,
     hardness: 3,
+    requiredTool: 'stonePickaxe',
     material: new THREE.MeshLambertMaterial({ map: textures.ore.iron }),
   },
   coalOre: {
@@ -104,6 +106,7 @@ export const blocks = {
     solid: true,
     opaque: true,
     hardness: 3,
+    requiredTool: 'pickaxe',
     material: new THREE.MeshLambertMaterial({ map: textures.ore.coal }),
   },
   oakLog: {
@@ -190,6 +193,10 @@ export const blocks = {
     }),
   },
 };
+
+for (const block of Object.values(blocks)) {
+  block.drops = block.id === blocks.empty.id ? null : block.id;
+}
 
 export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),

@@ -1,12 +1,9 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { blocks } from '../blocks/blocksRegistry';
 import { Tool } from './Tool';
 import { CONFIG } from '../../app/config';
 import { state } from '../../app/state';
 import { createPlayerCamera } from '../../scene/camera';
-
-const CENTRE_SCREEN = new THREE.Vector2();
 
 export class Player {
   radius = CONFIG.player.radius;
@@ -21,14 +18,6 @@ export class Player {
 
   camera = createPlayerCamera();
   controls = new PointerLockControls(this.camera, document.body);
-
-  raycaster = new THREE.Raycaster(
-    new THREE.Vector3(),
-    new THREE.Vector3(),
-    CONFIG.player.raycaster.near,
-    CONFIG.player.raycaster.far,
-  );
-  selectedCoords = null;
 
   tool = new Tool();
 
@@ -51,8 +40,6 @@ export class Player {
     );
     this.selectionHelper = new THREE.Mesh(selectionGeometry, selectionMaterial);
     scene.add(this.selectionHelper);
-
-    this.raycaster.layers.set(0);
   }
 
   /**
@@ -71,42 +58,20 @@ export class Player {
    * Update the player state
    * @param {World} world
    */
-  update(world) {
-    this.updateRaycaster(world);
+  update() {
     this.tool.update();
   }
 
-  /**
-   * Update the raycaster use for picking blocks
-   * @param {World} world
-   */
-  updateRaycaster(world) {
-    this.raycaster.setFromCamera(CENTRE_SCREEN, this.camera);
-    const intersections = this.raycaster.intersectObject(world, true);
+  showSelection(position, colour, scale = 1) {
+    this.selectionHelper.position.copy(position);
+    this.selectionHelper.scale.setScalar(scale);
+    if (colour !== undefined)
+      this.selectionHelper.material.color.setHex(colour);
+    this.selectionHelper.visible = true;
+  }
 
-    if (intersections.length > 0) {
-      const intersection = intersections[0];
-
-      // Get chunk position of block
-      const chunk = intersection.object.parent;
-
-      // Get transformation matrix of the intersected block
-      const blockMatrix = new THREE.Matrix4();
-      intersection.object.getMatrixAt(intersection.instanceId, blockMatrix);
-
-      // Extract position from block's transformation matrix
-      this.selectedCoords = chunk.position.clone();
-      this.selectedCoords.applyMatrix4(blockMatrix);
-
-      if (state.activeBlock.id !== blocks.empty.id) {
-        this.selectedCoords.add(intersection.normal);
-      }
-      this.selectionHelper.position.copy(this.selectedCoords);
-      this.selectionHelper.visible = true;
-    } else {
-      this.selectedCoords = null;
-      this.selectionHelper.visible = false;
-    }
+  hideSelection() {
+    this.selectionHelper.visible = false;
   }
 
   /**
@@ -129,14 +94,6 @@ export class Player {
       this.updatePositionDisplay();
     }
   }
-
-  /**
-   * Updates the position of the player's bounding cylinder helper
-   */
-  //   updateBoundsHelper() {
-  //     this.boundsHelper.position.copy(this.position);
-  //     this.boundsHelper.position.y -= this.height / 2;
-  //   }
 
   /**
    * Returns the current world position of the player

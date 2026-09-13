@@ -9,6 +9,7 @@ export class Tool extends THREE.Group {
   animationSpeed = CONFIG.tool.animation.speed;
   animation = undefined;
   toolMesh = undefined;
+  type = 'pickaxe';
 
   get animationTime() {
     return performance.now() - this.animationStart;

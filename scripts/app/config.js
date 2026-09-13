@@ -66,6 +66,12 @@ export const CONFIG = {
         color: 0xffffaa,
       },
     },
+    placement: 0x88ff88,
+  },
+  mining: {
+    secondsPerHardness: 1,
+    correctToolMultiplier: 4,
+    wrongToolMultiplier: 1,
   },
   tool: {
     animation: {
@@ -109,7 +115,7 @@ export const CONFIG = {
     headroom: 64,
     regenerateDebounceMs: 200,
     chunkSize: {
-      width: 16,
+      width: 8,
       minY: -32,
       maxY: 32,
     },
@@ -139,7 +145,7 @@ export const CONFIG = {
         canopy: {
           minRadius: 2,
           maxRadius: 3,
-          density: 0.5, // varies between 0.0 and 1.0
+          density: 0.5,
         },
         frequency: 0.02,
       },

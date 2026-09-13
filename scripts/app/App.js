@@ -11,7 +11,7 @@ import { Hud } from '../ui/Hud';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import { ResizeSystem } from '../systems/ResizeSystem';
 import { InputSystem } from '../systems/InputSystem';
-import { InteractionSystem } from '../systems/InteractionSystem';
+import { InteractionSystem } from '../systems/interaction/InteractionSystem';
 import { PersistenceSystem } from '../systems/PersistenceSystem';
 import { createDebugGui } from '../ui/DebugGui';
 
@@ -58,7 +58,7 @@ export class App {
     this.physics = new PhysicsSystem(scene);
     new ResizeSystem(renderer, [this.orbitCamera, this.player.camera]);
     new InputSystem(this.player);
-    new InteractionSystem(this.player, this.world);
+    this.interaction = new InteractionSystem(this.player, this.world);
     new PersistenceSystem(this.world);
   }
 
@@ -72,6 +72,7 @@ export class App {
 
     if (this.player.controls.isLocked) {
       this.player.update(this.world);
+      this.interaction.update(dt);
       this.physics.update(dt, this.player, this.world);
       this.world.update(this.player);
       this.lighting.update(this.player);
