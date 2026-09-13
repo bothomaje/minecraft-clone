@@ -1,32 +1,62 @@
 import { Item } from './Item';
 import { ItemStack } from './ItemStack';
 
-const itemIcons = {
-  dirt: null,
-  cobblestone: null,
-  sand: null,
-  ironOre: null,
-  oakLog: null,
-  oakLeaves: null,
-  snow: null,
-  cactus: null,
-  coal: null,
-  jungleLog: null,
-  jungleLeaves: null,
-};
-
 export const items = {
-  dirt: new Item(3, 'dirt', 64, itemIcons.dirt),
-  cobblestone: new Item(4, 'cobblestone', 64, itemIcons.cobblestone),
-  sand: new Item(12, 'sand', 64, itemIcons.sand),
-  ironOre: new Item(15, 'iron_ore', 64, itemIcons.ironOre),
-  oakLog: new Item(17, 'oak_log', 64, itemIcons.oakLog),
-  oakLeaves: new Item(18, 'oak_leaves', 64, itemIcons.oakLeaves),
-  snow: new Item(80, 'snow', 64, itemIcons.snow),
-  cactus: new Item(81, 'cactus', 64, itemIcons.cactus),
-  coal: new Item(302, 'coal', 64, itemIcons.coal),
-  jungleLog: new Item(571, 'jungle_log', 64, itemIcons.jungleLog),
-  jungleLeaves: new Item(572, 'jungle_leaves', 64, itemIcons.jungleLeaves),
+  dirt: new Item({
+    id: 3,
+    name: 'dirt',
+    icon: '/textures/block/dirt.png',
+  }),
+  cobblestone: new Item({
+    id: 4,
+    name: 'cobblestone',
+    icon: '/textures/block/cobblestone.png',
+  }),
+  sand: new Item({
+    id: 12,
+    name: 'sand',
+    icon: '/textures/block/sand.png',
+  }),
+  ironOre: new Item({
+    id: 15,
+    name: 'iron_ore',
+    icon: '/textures/block/iron_ore.png',
+  }),
+  oakLog: new Item({
+    id: 17,
+    name: 'oak_log',
+    icon: '/textures/block/oak_log.png',
+  }),
+  oakLeaves: new Item({
+    id: 18,
+    name: 'oak_leaves',
+    icon: '/textures/block/oak_leaves.png',
+  }),
+  snow: new Item({
+    id: 80,
+    name: 'snow',
+    icon: '/textures/block/snow.png',
+  }),
+  cactus: new Item({
+    id: 81,
+    name: 'cactus',
+    icon: '/textures/block/cactus_side.png',
+  }),
+  coal: new Item({
+    id: 302,
+    name: 'coal',
+    icon: '/textures/item/coal.png',
+  }),
+  jungleLog: new Item({
+    id: 571,
+    name: 'jungle_log',
+    icon: '/textures/block/jungle_log.png',
+  }),
+  jungleLeaves: new Item({
+    id: 572,
+    name: 'jungle_leaves',
+    icon: '/textures/block/jungle_leaves.png',
+  }),
 };
 
 export const itemsById = new Map(

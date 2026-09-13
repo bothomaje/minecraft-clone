@@ -90,6 +90,22 @@ export const blocks = {
     sounds: sounds.dirt,
     drops: [{ item: items.dirt, count: 1 }],
   },
+  cobblestone: {
+    id: 4,
+    name: 'cobblestone',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 1.5,
+    gravity: false,
+    requiredTool: 'pickaxe',
+    color: 0x808080,
+    scale: { x: 30, y: 30, z: 30 },
+    scarcity: 0.5,
+    material: new THREE.MeshLambertMaterial({ map: textures.cobblestone }),
+    sounds: sounds.stone,
+    drops: [{ item: items.cobblestone, count: 1 }],
+  },
   cloud: {
     id: 9,
     name: 'cloud',
@@ -243,3 +259,16 @@ export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),
 );
 export const resources = [blocks.stone, blocks.coalOre, blocks.ironOre];
+
+export const placeableBlockByItem = new Map([
+  [items.dirt, blocks.dirt],
+  [items.cobblestone, blocks.stone],
+  [items.sand, blocks.sand],
+  [items.ironOre, blocks.ironOre],
+  [items.oakLog, blocks.oakLog],
+  [items.oakLeaves, blocks.oakLeaves],
+  [items.snow, blocks.snow],
+  [items.cactus, blocks.cactus],
+  [items.jungleLog, blocks.jungleLog],
+  [items.jungleLeaves, blocks.jungleLeaves],
+]);

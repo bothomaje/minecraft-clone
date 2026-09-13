@@ -1,6 +1,5 @@
 import { CONFIG } from '../app/config';
 import { state } from '../app/state';
-import { blocks } from '../objects/blocks/blocksRegistry';
 
 export class InputSystem {
   constructor(player) {
@@ -19,7 +18,6 @@ export class InputSystem {
     }
 
     switch (event.code) {
-      case 'Digit0':
       case 'Digit1':
       case 'Digit2':
       case 'Digit3':
@@ -28,9 +26,9 @@ export class InputSystem {
       case 'Digit6':
       case 'Digit7':
       case 'Digit8':
-        state.activeSlot = Number(event.key);
-        state.activeBlock = CONFIG.toolbar.slots[state.activeSlot];
-        this.player.tool.visible = state.activeBlock.id === blocks.empty.id;
+      case 'Digit9':
+        state.activeSlot = Number(event.key) - 1;
+        this.player.inventory.selectedSlot = state.activeSlot;
         break;
       case 'KeyW':
         this.player.input.z = this.player.maxSpeed;

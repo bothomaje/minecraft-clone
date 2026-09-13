@@ -1,14 +1,21 @@
 import { CONFIG } from '../../app/config';
-import { state } from '../../app/state';
-import { blocks, blocksById } from '../../objects/blocks/blocksRegistry';
+import {
+  blocksById,
+  placeableBlockByItem,
+} from '../../objects/blocks/blocksRegistry';
 import { rollBlockDrops } from '../../objects/items/ItemRegistry';
 import { Raycaster } from './Raycaster';
+
+const MOUSE_BUTTON = {
+  LEFT: 0,
+  RIGHT: 2,
+};
 
 export class InteractionSystem {
   raycaster = new Raycaster();
   hit = null;
   mining = null;
-  mouseDown = false;
+  leftMouseDown = false;
 
   static blockKey(pos) {
     return `${pos.x},${pos.y},${pos.z}`;
@@ -21,6 +28,7 @@ export class InteractionSystem {
 
     document.addEventListener('mousedown', this.onMouseDown.bind(this));
     document.addEventListener('mouseup', this.onMouseUp.bind(this));
+    document.addEventListener('contextmenu', this.onContextMenu.bind(this));
   }
 
   /**
@@ -38,72 +46,81 @@ export class InteractionSystem {
       return;
     }
 
-    if (state.activeBlock === blocks.empty) {
+    if (this.leftMouseDown) {
       this.updateBreaking(dt);
-    } else {
-      this.cancelMining();
+      return;
+    }
+
+    this.cancelMining();
+
+    if (this.getPlaceableBlock()) {
       this.updatePlacementPreview();
+    } else {
+      this.player.showSelection(
+        this.hit.blockPosition,
+        CONFIG.player.selectionHelper.material.color,
+        1,
+      );
     }
   }
 
-  onMouseDown() {
+  onMouseDown(event) {
     if (!this.player.controls.isLocked) return;
 
-    this.mouseDown = true;
-
-    if (state.activeBlock !== blocks.empty) {
+    if (event.button === MOUSE_BUTTON.LEFT) {
+      this.leftMouseDown = true;
+    } else if (event.button === MOUSE_BUTTON.RIGHT) {
       this.tryPlaceBlock();
     }
   }
 
-  onMouseUp() {
-    this.mouseDown = false;
-    this.cancelMining();
+  onMouseUp(event) {
+    if (event.button === MOUSE_BUTTON.LEFT) {
+      this.leftMouseDown = false;
+      this.cancelMining();
+    }
+  }
+
+  onContextMenu(event) {
+    if (this.player.controls.isLocked) event.preventDefault();
+  }
+
+  /**
+   * Returns the block the player's currently selected item would place, or
+   * null if the held item (or an empty slot) isn't placeable.
+   */
+  getPlaceableBlock() {
+    const stack = this.player.inventory.getSlot(
+      this.player.inventory.selectedSlot,
+    );
+    if (!stack) return null;
+
+    return placeableBlockByItem.get(stack.item) ?? null;
   }
 
   updateBreaking(dt) {
     const pos = this.hit.blockPosition;
+    const key = InteractionSystem.blockKey(pos);
 
-    if (this.mouseDown) {
-      const key = InteractionSystem.blockKey(pos);
+    if (!this.mining || this.mining.key !== key) {
+      this.startMining(pos, key);
+    }
 
-      if (!this.mining || this.mining.key !== key) {
-        this.startMining(pos, key);
-      }
+    if (!this.mining) return;
 
-      if (this.mining) {
-        this.mining.elapsed += dt;
-        const progress = Math.min(
-          this.mining.elapsed / this.mining.requiredTime,
-          1,
-        );
+    this.mining.elapsed += dt;
+    const progress = Math.min(
+      this.mining.elapsed / this.mining.requiredTime,
+      1,
+    );
 
-        if (
-          this.mining.elapsed - this.mining.lastSoundTick >=
-          CONFIG.mining.soundTickInterval
-        ) {
-          this.sounds?.play(this.mining.blockType, 'break');
-          this.player.tool.startAnimation();
-          this.mining.lastSoundTick = this.mining.elapsed;
-        }
-
-        this.player.showSelection(
-          pos,
-          CONFIG.player.selectionHelper.material.color,
-          1,
-        );
-
-        const stage = Math.floor(progress * CONFIG.mining.stages);
-        this.player.showCrack(pos, stage);
-
-        if (progress >= 1) {
-          this.finishMining();
-        }
-
-        return;
-      }
-    } else {
-      this.cancelMining();
+    if (
+      this.mining.elapsed - this.mining.lastSoundTick >=
+      CONFIG.mining.soundTickInterval
+    ) {
+      this.sounds?.play(this.mining.blockType, 'break');
+      this.player.tool.startAnimation();
+      this.mining.lastSoundTick = this.mining.elapsed;
     }
 
     this.player.showSelection(
@@ -111,6 +128,13 @@ export class InteractionSystem {
       CONFIG.player.selectionHelper.material.color,
       1,
     );
+
+    const stage = Math.floor(progress * CONFIG.mining.stages);
+    this.player.showCrack(pos, stage);
+
+    if (progress >= 1) {
+      this.finishMining();
+    }
   }
 
   startMining(position, key) {
@@ -183,11 +207,17 @@ export class InteractionSystem {
   tryPlaceBlock() {
     if (!this.hit) return;
 
+    const stack = this.player.inventory.getSlot(
+      this.player.inventory.selectedSlot,
+    );
+    const blockToPlace = stack && placeableBlockByItem.get(stack.item);
+    if (!blockToPlace) return;
+
     const placementPos = this.hit.placementPosition;
     if (this.overlapsPlayer(placementPos)) return;
 
     const placementState = this.getPlacementState(
-      state.activeBlock,
+      blockToPlace,
       this.hit.normal,
     );
 
@@ -195,11 +225,12 @@ export class InteractionSystem {
       placementPos.x,
       placementPos.y,
       placementPos.z,
-      state.activeBlock,
+      blockToPlace,
       placementState,
     );
 
-    this.sounds?.play(state.activeBlock, 'place');
+    this.sounds?.play(blockToPlace, 'place');
+    this.player.inventory.removeItem(stack.item, 1);
   }
 
   getPlacementState(block, normal) {

@@ -15,6 +15,7 @@ import { InteractionSystem } from '../systems/interaction/InteractionSystem';
 import { PersistenceSystem } from '../systems/PersistenceSystem';
 import { createDebugGui } from '../ui/DebugGui';
 import { SoundManager } from '../loaders/SoundManager';
+import { InventoryUi } from '../ui/InventoryUi';
 
 export class App {
   stats = new Stats();
@@ -54,7 +55,8 @@ export class App {
     });
 
     this.lighting = new Lighting(scene);
-    this.hud = new Hud();
+    this.hud = new Hud(this.player);
+    this.inventoryUi = new InventoryUi(this.player);
 
     this.physics = new PhysicsSystem(scene);
     this.sounds = new SoundManager(this.player.listener);
@@ -65,7 +67,7 @@ export class App {
     );
     new ResizeSystem(renderer, [this.orbitCamera, this.player.camera]);
     new InputSystem(this.player);
-    new PersistenceSystem(this.world);
+    new PersistenceSystem(this.world, this.player);
   }
 
   animate = () => {
@@ -75,6 +77,7 @@ export class App {
     requestAnimationFrame(this.animate);
 
     this.hud.update();
+    this.inventoryUi.update();
 
     if (this.player.controls.isLocked) {
       this.player.update(this.world);

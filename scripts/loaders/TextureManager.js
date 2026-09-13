@@ -20,6 +20,7 @@ export const textures = {
     side: loadTexture('textures/block/grass_block_side.png'),
   },
   stone: loadTexture('textures/block/stone.png'),
+  cobblestone: loadTexture('textures/block/cobblestone.png'),
   ore: {
     coal: loadTexture('textures/block/coal_ore.png'),
     iron: loadTexture('textures/block/iron_ore.png'),

@@ -2,8 +2,9 @@ import { CONFIG } from '../app/config';
 import { state } from '../app/state';
 
 export class PersistenceSystem {
-  constructor(world) {
+  constructor(world, player) {
     this.world = world;
+    this.player = player;
     document.addEventListener('keydown', this.onKeyDown.bind(this));
   }
 
@@ -30,6 +31,10 @@ export class PersistenceSystem {
       CONFIG.world.persistenceKeys.data,
       JSON.stringify(this.world.dataStore.data),
     );
+    localStorage.setItem(
+      CONFIG.world.persistenceKeys.inventory,
+      JSON.stringify(this.player.inventory.serialize()),
+    );
     this.showMessage('Game saved');
   }
 
@@ -41,6 +46,9 @@ export class PersistenceSystem {
       CONFIG.world.persistenceKeys.params,
     );
     const data = localStorage.getItem(CONFIG.world.persistenceKeys.data);
+    const inventory = localStorage.getItem(
+      CONFIG.world.persistenceKeys.inventory,
+    );
 
     if (!parameters || !data) {
       this.showMessage('No game has been saved yet');
@@ -49,6 +57,10 @@ export class PersistenceSystem {
 
     this.world.params = JSON.parse(parameters);
     this.world.dataStore.data = JSON.parse(data);
+    if (inventory) {
+      this.player.inventory.restore(JSON.parse(inventory));
+    }
+
     this.showMessage('Game loaded');
     this.world.generate();
   }

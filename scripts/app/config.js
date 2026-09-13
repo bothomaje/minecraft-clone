@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { blocks } from '../objects/blocks/blocksRegistry';
 
 export const CONFIG = {
   renderer: {
@@ -98,7 +97,7 @@ export const CONFIG = {
     },
   },
   inventory: {
-    hotbar: 9,
+    toolbar: 9,
     main: 27,
   },
   physics: {
@@ -180,19 +179,7 @@ export const CONFIG = {
     persistenceKeys: {
       params: 'minecraft_params',
       data: 'minecraft_data',
+      inventory: 'minecraft_inventory',
     },
-  },
-  toolbar: {
-    slots: [
-      blocks.empty,
-      blocks.grassBlock,
-      blocks.dirt,
-      blocks.stone,
-      blocks.coalOre,
-      blocks.ironOre,
-      blocks.oakLog,
-      blocks.oakLeaves,
-      blocks.sand,
-    ],
   },
 };

@@ -1,3 +1,9 @@
+@font-face {
+  font-family: 'Minecraft';
+  src: url('/font/minecraft.ttf') format('truetype');
+  font-display: swap; /* Keeps text visible while loading */
+}
+
 body {
   margin: 0;
 }
@@ -6,7 +12,7 @@ body {
   position: absolute;
   right: 0;
   bottom: 0;
-  font-family: sans-serif;
+  font-family: 'Minecraft', monospace;
   font-size: 24px;
   color: white;
   margin: 8px;
@@ -29,14 +35,32 @@ body {
   column-gap: 6px;
 }
 
-.toolbar-icon {
-  width: 32px;
-  height: 32px;
+.toolbar-slot {
+  position: relative;
+  width: 48px;
+  height: 48px;
   outline: 2px solid rgb(58, 58, 58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.toolbar-icon.selected {
+.toolbar-slot.selected {
   outline: 2px solid white;
+}
+
+.toolbar-slot .toolbar-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.toolbar-slot .item-count {
+  position: absolute;
+  color: white;
+  font-family: 'Minecraft', monospace;
+  font-size: 1em;
+  right: 4px;
+  bottom: 0;
 }
 
 #status {
@@ -44,6 +68,44 @@ body {
   bottom: 8px;
   left: 8px;
   font-size: 2em;
-  font-family: sans-serif;
+  font-family: 'Minecraft', monospace;
   color: white;
+}
+
+#inventory-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 16px;
+  z-index: 20;
+}
+
+#inventory-grid {
+  background-color: rgb(109, 109, 109);
+  border: 2px solid rgb(147, 147, 147);
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(9, 48px);
+  gap: 6px;
+}
+
+#crafting-placeholder {
+  color: white;
+  font-family: 'Minecraft', monospace;
+  font-size: 1em;
+  border: 2px dashed rgb(147, 147, 147);
+  padding: 8px 16px;
+}
+
+#inventory-cursor {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  border: none;
+  outline: none;
 }

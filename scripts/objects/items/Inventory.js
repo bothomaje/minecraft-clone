@@ -1,12 +1,13 @@
+import { CONFIG } from '../../app/config';
+import { state } from '../../app/state';
+import { itemsById } from './ItemRegistry';
 import { ItemStack } from './ItemStack';
 
-const HOTBAR_SIZE = 9;
-const MAIN_SIZE = 27;
-const TOTAL_SLOTS = HOTBAR_SIZE + MAIN_SIZE;
+const TOTAL_SLOTS = CONFIG.inventory.toolbar + CONFIG.inventory.main;
 
 export class Inventory {
   slots = new Array(TOTAL_SLOTS).fill(null);
-  selectedSlot = 0;
+  selectedSlot = state.activeSlot;
 
   getSlot(index) {
     return this.slots[index] ?? null;
@@ -106,5 +107,27 @@ export class Inventory {
       this.slots[indexB],
       this.slots[indexA],
     ];
+  }
+
+  /**
+   * Serializes the inventory to a plain, JSON-safe array.
+   */
+  serialize() {
+    return this.slots.map((stack) =>
+      stack ? { itemId: stack.item.id, count: stack.count } : null,
+    );
+  }
+
+  /**
+   * Restores slots from data produced by `serialize()`. Unknown item ids
+   * (e.g. from an older save) are dropped rather than throwing.
+   */
+  restore(serialized) {
+    this.slots = serialized.map((entry) => {
+      if (!entry) return null;
+
+      const item = itemsById.get(entry.itemId);
+      return item ? new ItemStack(item, entry.count) : null;
+    });
   }
 }
