@@ -97,6 +97,10 @@ export const CONFIG = {
       y: THREE.MathUtils.degToRad(100),
     },
   },
+  inventory: {
+    hotbar: 9,
+    main: 27,
+  },
   physics: {
     simulationRate: 200,
     gravity: 32,

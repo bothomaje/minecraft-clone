@@ -16,17 +16,17 @@ const itemIcons = {
 };
 
 export const items = {
-  dirt: new Item(3, 'dirt', itemIcons.dirt),
-  cobblestone: new Item(4, 'cobblestone', itemIcons.cobblestone),
-  sand: new Item(12, 'sand', itemIcons.sand),
-  ironOre: new Item(15, 'iron_ore', itemIcons.ironOre),
-  oakLog: new Item(17, 'oak_log', itemIcons.oakLog),
-  oakLeaves: new Item(18, 'oak_leaves', itemIcons.oakLeaves),
-  snow: new Item(80, 'snow', itemIcons.snow),
-  cactus: new Item(81, 'cactus', itemIcons.cactus),
-  coal: new Item(302, 'coal', itemIcons.coal),
-  jungleLog: new Item(571, 'jungle_log', itemIcons.jungleLog),
-  jungleLeaves: new Item(572, 'jungle_leaves', itemIcons.jungleLeaves),
+  dirt: new Item(3, 'dirt', 64, itemIcons.dirt),
+  cobblestone: new Item(4, 'cobblestone', 64, itemIcons.cobblestone),
+  sand: new Item(12, 'sand', 64, itemIcons.sand),
+  ironOre: new Item(15, 'iron_ore', 64, itemIcons.ironOre),
+  oakLog: new Item(17, 'oak_log', 64, itemIcons.oakLog),
+  oakLeaves: new Item(18, 'oak_leaves', 64, itemIcons.oakLeaves),
+  snow: new Item(80, 'snow', 64, itemIcons.snow),
+  cactus: new Item(81, 'cactus', 64, itemIcons.cactus),
+  coal: new Item(302, 'coal', 64, itemIcons.coal),
+  jungleLog: new Item(571, 'jungle_log', 64, itemIcons.jungleLog),
+  jungleLeaves: new Item(572, 'jungle_leaves', 64, itemIcons.jungleLeaves),
 };
 
 export const itemsById = new Map(

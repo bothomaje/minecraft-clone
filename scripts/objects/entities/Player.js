@@ -5,6 +5,7 @@ import { CONFIG } from '../../app/config';
 import { state } from '../../app/state';
 import { createPlayerCamera } from '../../scene/camera';
 import { textures } from '../../loaders/TextureManager';
+import { Inventory } from '../items/Inventory';
 
 export class Player {
   radius = CONFIG.player.radius;
@@ -21,6 +22,7 @@ export class Player {
   controls = new PointerLockControls(this.camera, document.body);
 
   tool = new Tool();
+  inventory = new Inventory();
   listener = new THREE.AudioListener();
 
   /**

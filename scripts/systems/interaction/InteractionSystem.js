@@ -162,8 +162,10 @@ export class InteractionSystem {
     const stacks = rollBlockDrops(block);
 
     for (const stack of stacks) {
-      console.log(`Picked up: ${stack.item.name} x${stack.count}`);
-      // TODO Phase 4: this.player.inventory.addItem(stack) once Inventory exists
+      const leftover = this.player.inventory.addItem(stack);
+      if (leftover > 0) {
+        console.log(`Inventory full, dropped ${leftover}x ${stack.item.name}`);
+      }
     }
   }
 
