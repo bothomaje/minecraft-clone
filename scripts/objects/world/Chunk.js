@@ -17,6 +17,11 @@ export class Chunk extends THREE.Group {
     return `${x},${y},${z}`;
   }
 
+  /**
+   * @param {{ width: number, minHeight: number, maxHeight: number }} size
+   * @param {World} world
+   * @param {DataStore} dataStore
+   */
   constructor(size, world, dataStore) {
     super();
     this.loaded = false;
@@ -30,13 +35,11 @@ export class Chunk extends THREE.Group {
    */
   generate() {
     const rng = new RNG(this.world.params.seed);
-
     this.initializeTerrain();
     this.generateTerrain(rng);
     this.generateClouds(rng);
     this.loadPlayerChanges();
     this.generateMeshes();
-
     this.loaded = true;
   }
 
@@ -61,6 +64,7 @@ export class Chunk extends THREE.Group {
 
   /**
    * Generates the terrain data for the world
+   * @param {RNG} rng
    */
   generateTerrain(rng) {
     const simplex = new SimplexNoise(rng);
@@ -148,6 +152,10 @@ export class Chunk extends THREE.Group {
   /**
    * Populate the world with trees
    * @param {RNG} rng
+   * @param {string} biome
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
    */
   generateTree(rng, biome, x, y, z) {
     const minHeight = this.world.params.trees.trunk.minHeight;
@@ -171,6 +179,14 @@ export class Chunk extends THREE.Group {
     }
   }
 
+  /**
+   * Generate the canopy for a tree
+   * @param {string} biome
+   * @param {number} centreX
+   * @param {number} centreY
+   * @param {number} centreZ
+   * @param {RNG} rng
+   */
   generateTreeCanopy = (biome, centreX, centreY, centreZ, rng) => {
     const minRadius = this.world.params.trees.canopy.minRadius;
     const maxRadius = this.world.params.trees.canopy.maxRadius;
@@ -184,9 +200,6 @@ export class Chunk extends THREE.Group {
           const n = rng.random();
 
           if (x * x + y * y + z * z >= radius * radius) continue;
-
-          // const block = this.getBlock(centreX + x, centreY + y, centreZ + z);
-          // if (block && block.id !== blocks.empty.id) continue;
 
           if (n < this.world.params.trees.canopy.density) {
             if (biome === 'Temperate') {
@@ -257,6 +270,9 @@ export class Chunk extends THREE.Group {
     }
   }
 
+  /**
+   * Generate the water plane at sea level
+   */
   generateWater() {
     const material = new THREE.MeshLambertMaterial(CONFIG.world.water.material);
 
@@ -401,6 +417,8 @@ export class Chunk extends THREE.Group {
       newMesh.setMatrixAt(i, matrix);
     }
     newMesh.count = mesh.count;
+    newMesh.instanceMatrix.needsUpdate = true;
+    newMesh.computeBoundingSphere();
 
     this.remove(mesh);
     this.add(newMesh);
@@ -413,7 +431,7 @@ export class Chunk extends THREE.Group {
    * @param {number} x
    * @param {number} y
    * @param {number} z
-   * @returns {{id: number, instanceId: number, state: {}}}
+   * @returns {{id: number, instanceId: number, state: {}} | null}
    */
   getBlock(x, y, z) {
     if (this.inBounds(x, y, z)) {
@@ -428,7 +446,7 @@ export class Chunk extends THREE.Group {
    * @param {number} x
    * @param {number} y
    * @param {number} z
-   * @param {number} block
+   * @param {{id: number, instanceId: number, state: {}}} block
    */
   addBlock(x, y, z, block) {
     if (this.getBlock(x, y, z).id === blocks.empty.id) {
@@ -544,9 +562,17 @@ export class Chunk extends THREE.Group {
       matrix.setPosition(x, y, z);
       mesh.setMatrixAt(instanceId, matrix);
       mesh.instanceMatrix.needsUpdate = true;
+      mesh.computeBoundingSphere();
     }
   }
 
+  /**
+   * Returns the id of the block at (x, y, z)
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   * @returns {number}
+   */
   getBlockId(x, y, z) {
     if (this.inBounds(x, y, z)) {
       return this.getBlock(x, y, z).id;
@@ -629,6 +655,9 @@ export class Chunk extends THREE.Group {
     return neighbourIds.every((id) => blocksById.get(id)?.opaque);
   }
 
+  /**
+   * Clears all block instances in the chunk
+   */
   disposeInstances() {
     this.traverse((obj) => {
       if (obj.dispose) obj.dispose();
