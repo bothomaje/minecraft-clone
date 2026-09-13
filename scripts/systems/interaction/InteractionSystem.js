@@ -1,6 +1,7 @@
 import { CONFIG } from '../../app/config';
 import { state } from '../../app/state';
 import { blocks, blocksById } from '../../objects/blocks/blocksRegistry';
+import { rollBlockDrops } from '../../objects/items/ItemRegistry';
 import { Raycaster } from './Raycaster';
 
 export class InteractionSystem {
@@ -158,10 +159,12 @@ export class InteractionSystem {
   }
 
   handleDrops(block) {
-    if (block.drops === null || block.drops === undefined) return;
+    const stacks = rollBlockDrops(block);
 
-    const dropType = blocksById.get(block.drops);
-    console.log(`Picked up: ${dropType?.name ?? block.drops}`);
+    for (const stack of stacks) {
+      console.log(`Picked up: ${stack.item.name} x${stack.count}`);
+      // TODO Phase 4: this.player.inventory.addItem(stack) once Inventory exists
+    }
   }
 
   updatePlacementPreview() {

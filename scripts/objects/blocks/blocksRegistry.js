@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { textures } from '../../loaders/TextureManager';
+import { items } from '../items/ItemRegistry';
 
 const BlockCategory = {
   SOLID: 'solid',
@@ -35,6 +36,7 @@ export const blocks = {
     solid: false,
     opaque: false,
     hardness: 0,
+    drops: [],
   },
   stone: {
     id: 1,
@@ -50,6 +52,7 @@ export const blocks = {
     scarcity: 0.5,
     material: new THREE.MeshLambertMaterial({ map: textures.stone }),
     sounds: sounds.stone,
+    drops: [{ item: items.cobblestone, count: 1 }],
   },
   grassBlock: {
     id: 2,
@@ -72,6 +75,7 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // back
     ],
     sounds: sounds.grass,
+    drops: [{ item: items.dirt, count: 1 }],
   },
   dirt: {
     id: 3,
@@ -84,6 +88,7 @@ export const blocks = {
     color: 0x807020,
     material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
     sounds: sounds.dirt,
+    drops: [{ item: items.dirt, count: 1 }],
   },
   cloud: {
     id: 9,
@@ -93,6 +98,7 @@ export const blocks = {
     opaque: false,
     hardness: 0,
     material: new THREE.MeshBasicMaterial({ color: 0xf0f0f0 }),
+    drops: [],
   },
   sand: {
     id: 12,
@@ -104,6 +110,7 @@ export const blocks = {
     gravity: true,
     material: new THREE.MeshLambertMaterial({ map: textures.sand }),
     sounds: sounds.sand,
+    drops: [{ item: items.sand, count: 1 }],
   },
   ironOre: {
     id: 15,
@@ -118,6 +125,7 @@ export const blocks = {
     requiredTool: 'stonePickaxe',
     material: new THREE.MeshLambertMaterial({ map: textures.ore.iron }),
     sounds: sounds.stone,
+    drops: [{ item: items.ironOre, count: 1 }],
   },
   coalOre: {
     id: 16,
@@ -132,6 +140,7 @@ export const blocks = {
     requiredTool: 'pickaxe',
     material: new THREE.MeshLambertMaterial({ map: textures.ore.coal }),
     sounds: sounds.stone,
+    drops: [{ item: items.coal, count: 1 }],
   },
   oakLog: {
     id: 17,
@@ -149,6 +158,7 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
     ],
     sounds: sounds.wood,
+    drops: [{ item: items.oakLog, count: 1 }],
   },
   oakLeaves: {
     id: 18,
@@ -163,6 +173,7 @@ export const blocks = {
       color: 0x79c05a,
     }),
     sounds: sounds.grass,
+    drops: [{ item: items.oakLeaves, count: 1, chance: 0.05 }],
   },
   snow: {
     id: 80,
@@ -173,6 +184,7 @@ export const blocks = {
     hardness: 0.2,
     material: new THREE.MeshLambertMaterial({ map: textures.snow }),
     sounds: sounds.snow,
+    drops: [{ item: items.snow, count: 1 }],
   },
   cactus: {
     id: 81,
@@ -190,9 +202,10 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
     ],
     sounds: sounds.wool,
+    drops: [{ item: items.cactus, count: 1 }],
   },
   jungleLog: {
-    id: -571,
+    id: 571,
     name: 'jungle_log',
     category: BlockCategory.SOLID,
     solid: true,
@@ -208,9 +221,10 @@ export const blocks = {
       new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
     ],
     sounds: sounds.wood,
+    drops: [{ item: items.jungleLog, count: 1 }],
   },
   jungleLeaves: {
-    id: -572,
+    id: 572,
     name: 'jungle_leaves',
     category: BlockCategory.SOLID,
     solid: true,
@@ -221,12 +235,9 @@ export const blocks = {
       color: 0x79c05a,
     }),
     sounds: sounds.grass,
+    drops: [{ item: items.jungleLeaves, count: 1, chance: 0.05 }],
   },
 };
-
-for (const block of Object.values(blocks)) {
-  block.drops = block.id === blocks.empty.id ? null : block.id;
-}
 
 export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),
