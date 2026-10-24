@@ -1,9 +1,9 @@
 export class RNG {
-  m_w = 123456789;
-  m_z = 987654321;
-  mask = 0xffffffff;
+  private m_w: number;
+  private m_z: number;
+  private readonly mask = 0xffffffff;
 
-  constructor(seed) {
+  constructor(seed: number) {
     this.m_w = (12345678 + seed) & this.mask;
     this.m_z = 987654321 - seed + this.mask;
   }
