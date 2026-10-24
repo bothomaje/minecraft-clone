@@ -42,6 +42,11 @@ export class PhysicsSystem {
    * @param {Chunk} world
    */
   update(dt, player, world) {
+    if (!world.isLoadedAt(player.position.x, player.position.z)) {
+      this.accumulator = 0;
+      return;
+    }
+
     this.accumulator += dt;
 
     while (this.accumulator >= this.timestep) {
@@ -102,8 +107,7 @@ export class PhysicsSystem {
     for (let x = extents.x.min; x <= extents.x.max; x++) {
       for (let y = extents.y.min; y <= extents.y.max; y++) {
         for (let z = extents.z.min; z <= extents.z.max; z++) {
-          const block = world.getBlock(x, y, z);
-          if (block && blocksById.get(block.id)?.solid) {
+          if (blocksById.get(world.getBlockId(x, y, z))?.solid) {
             const blockPos = { x, y, z };
             candidates.push(blockPos);
             if (CONFIG.physics.debug.enabled) this.addCollisionHelper(blockPos);

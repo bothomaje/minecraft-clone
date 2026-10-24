@@ -4,17 +4,28 @@ import { RNG } from '../../utils/Rng';
 import { blocks, blocksById, resources } from '../blocks/blocksRegistry';
 import { CONFIG } from '../../app/config';
 import { getBiome } from './Biome';
+import { ChunkData, UNLOADED } from '../../engine/world/ChunkData';
+import { CHUNK_VOLUME } from '../../engine/world/constants';
+import {
+  inLocalBounds,
+  blockIndex,
+  indexToLocal,
+} from '../../engine/world/coords';
 
 const geometry = new THREE.BoxGeometry();
+const NO_INSTANCE = -1;
 
 export class Chunk extends THREE.Group {
-  // Extra instance capacity reserved on top of what's needed at generation time,
-  // so placing a handful of new blocks doesn't immediately force a mesh resize
   PLACEMENT_HEADROOM = CONFIG.world.headroom;
-  data = new Map();
+  chunkData = new ChunkData();
+  instanceIds = new Int32Array(CHUNK_VOLUME).fill(NO_INSTANCE);
 
-  static dataKey(x, y, z) {
-    return `${x},${y},${z}`;
+  get chunkX() {
+    return Math.round(this.position.x / this.size.width);
+  }
+
+  get chunkZ() {
+    return Math.round(this.position.z / this.size.width);
   }
 
   /**
@@ -47,19 +58,8 @@ export class Chunk extends THREE.Group {
    * Initializes the world terrain data
    */
   initializeTerrain() {
-    this.data.clear();
-
-    for (let x = 0; x < this.size.width; x++) {
-      for (let y = this.size.minY; y < this.size.maxY; y++) {
-        for (let z = 0; z < this.size.width; z++) {
-          this.data.set(Chunk.dataKey(x, y, z), {
-            id: blocks.empty.id,
-            instanceId: null,
-            state: null,
-          });
-        }
-      }
-    }
+    this.chunkData.clear();
+    this.instanceIds.fill(NO_INSTANCE);
   }
 
   /**
@@ -117,7 +117,7 @@ export class Chunk extends THREE.Group {
             }
           } else if (
             y < height &&
-            this.getBlock(x, y, z).id === blocks.empty.id
+            this.getBlockId(x, y, z) === blocks.empty.id
           ) {
             this.generateResource(simplex, x, y, z);
           }
@@ -250,23 +250,14 @@ export class Chunk extends THREE.Group {
    * Pulls any changes from the data store and applies them to the data model
    */
   loadPlayerChanges() {
-    for (let x = 0; x < this.size.width; x++) {
-      for (let y = this.size.minY; y < this.size.maxY; y++) {
-        for (let z = 0; z < this.size.width; z++) {
-          if (
-            this.dataStore.contains(this.position.x, this.position.z, x, y, z)
-          ) {
-            const block = this.dataStore.get(
-              this.position.x,
-              this.position.z,
-              x,
-              y,
-              z,
-            );
-            this.setBlockId(x, y, z, blocksById.get(block.id));
-          }
-        }
-      }
+    const edits = this.dataStore.chunkEdits(this.chunkX, this.chunkZ);
+    if (!edits) return;
+
+    for (const [index, id] of edits) {
+      const block = blocksById.get(id);
+      if (!block) continue;
+      const { x, y, z } = indexToLocal(index);
+      this.setBlockId(x, y, z, block);
     }
   }
 
@@ -296,14 +287,8 @@ export class Chunk extends THREE.Group {
     this.clear();
     this.generateWater();
 
-    // const { width, height } = this.size;
-    const visible = new Uint8Array(
-      this.size.width * (this.size.maxY - this.size.minY) * this.size.width,
-    );
-    const index = (x, y, z) =>
-      (x * (this.size.maxY - this.size.minY) + (y - this.size.minY)) *
-        this.size.width +
-      z;
+    const visible = new Uint8Array(CHUNK_VOLUME);
+    const index = blockIndex;
 
     // First pass: count how many *visible* instances each block type actually
     // needs in this chunk. Most chunks won't contain most block types at all.
@@ -311,7 +296,7 @@ export class Chunk extends THREE.Group {
     for (let x = 0; x < this.size.width; x++) {
       for (let y = this.size.minY; y < this.size.maxY; y++) {
         for (let z = 0; z < this.size.width; z++) {
-          const blockId = this.getBlock(x, y, z).id;
+          const blockId = this.getBlockId(x, y, z);
           if (blockId === blocks.empty.id) continue;
           if (this.isBlockObscured(x, y, z)) continue;
 
@@ -347,7 +332,7 @@ export class Chunk extends THREE.Group {
         for (let z = 0; z < this.size.width; z++) {
           if (!visible[index(x, y, z)]) continue;
 
-          const blockId = this.getBlock(x, y, z).id;
+          const blockId = this.getBlockId(x, y, z);
           const mesh = meshes[blockId];
           const instanceId = mesh.count;
 
@@ -427,21 +412,6 @@ export class Chunk extends THREE.Group {
   }
 
   /**
-   * Gets the block data at (x, y, z)
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @returns {{id: number, instanceId: number, state: {}} | null}
-   */
-  getBlock(x, y, z) {
-    if (this.inBounds(x, y, z)) {
-      return this.data.get(Chunk.dataKey(x, y, z));
-    } else {
-      return null;
-    }
-  }
-
-  /**
    * Adds a new block at (x, y, z) of type `blockId`
    * @param {number} x
    * @param {number} y
@@ -449,13 +419,18 @@ export class Chunk extends THREE.Group {
    * @param {{id: number, instanceId: number, state: {}}} block
    */
   addBlock(x, y, z, block) {
-    if (this.getBlock(x, y, z).id === blocks.empty.id) {
+    if (
+      this.inBounds(x, y, z) &&
+      this.getBlockId(x, y, z) === blocks.empty.id
+    ) {
       this.setBlockId(x, y, z, block);
       this.addBlockInstance(x, y, z);
-      this.dataStore.set(this.position.x, this.position.z, x, y, z, {
-        id: block.id,
-        state: this.getBlock(block)?.state,
-      });
+      this.dataStore.set(
+        this.chunkX,
+        this.chunkZ,
+        blockIndex(x, y, z),
+        block.id,
+      );
     }
   }
 
@@ -466,15 +441,18 @@ export class Chunk extends THREE.Group {
    * @param {number} z
    */
   removeBlock(x, y, z) {
-    const block = this.getBlock(x, y, z);
-
-    if (block && block.id !== blocks.empty.id) {
+    if (
+      this.inBounds(x, y, z) &&
+      this.getBlockId(x, y, z) !== blocks.empty.id
+    ) {
       this.deleteBlockInstance(x, y, z);
       this.setBlockId(x, y, z, blocks.empty);
-      this.dataStore.set(this.position.x, this.position.z, x, y, z, {
-        id: blocks.empty.id,
-        state: null,
-      });
+      this.dataStore.set(
+        this.chunkX,
+        this.chunkZ,
+        blockIndex(x, y, z),
+        blocks.empty.id,
+      );
     }
   }
 
@@ -486,20 +464,18 @@ export class Chunk extends THREE.Group {
    * @param {number} z
    */
   deleteBlockInstance(x, y, z) {
-    const block = this.getBlock(x, y, z);
-
-    if (block.instanceId === null) return;
+    const instanceId = this.getInstanceId(x, y, z);
+    if (instanceId === NO_INSTANCE) return;
+    const blockId = this.getBlockId(x, y, z);
 
     // Get the mesh and instance id of the block
     const mesh = this.children.find(
-      (instanceMesh) => instanceMesh.name === block.id,
+      (instanceMesh) => instanceMesh.name === blockId,
     );
 
     if (!mesh) {
-      throw new Error(`Could not find InstancedMesh for block ${block.id}`);
+      throw new Error(`Could not find InstancedMesh for block ${blockId}`);
     }
-
-    const instanceId = block.instanceId;
 
     // Swapping the transformation matrix of the block in the last position
     // with the block that we are going to remove
@@ -523,7 +499,7 @@ export class Chunk extends THREE.Group {
     mesh.computeBoundingSphere();
 
     // Remove the instance associated with the block
-    this.setBlockInstanceId(x, y, z, null);
+    this.setBlockInstanceId(x, y, z, NO_INSTANCE);
   }
 
   /**
@@ -533,13 +509,17 @@ export class Chunk extends THREE.Group {
    * @param {number} z
    */
   addBlockInstance(x, y, z) {
-    const block = this.getBlock(x, y, z);
+    if (!this.inBounds(x, y, z)) return;
+    const blockId = this.getBlockId(x, y, z);
 
     // Verify the block exists and is not an empty block type
-    if (block && block.id !== blocks.empty.id && block.instanceId === null) {
+    if (
+      blockId !== blocks.empty.id &&
+      this.getInstanceId(x, y, z) === NO_INSTANCE
+    ) {
       // Get the mesh for the block, creating it if this block type wasn't
       // present when the chunk was generated, and growing it if it's full
-      let mesh = this.getOrCreateMesh(block.id);
+      let mesh = this.getOrCreateMesh(blockId);
       if (mesh.count >= mesh.instanceMatrix.count) {
         mesh = this.growMesh(mesh);
       }
@@ -575,14 +555,16 @@ export class Chunk extends THREE.Group {
    */
   getBlockId(x, y, z) {
     if (this.inBounds(x, y, z)) {
-      return this.getBlock(x, y, z).id;
+      return this.chunkData.get(x, y, z);
     }
     if (!this.world) return blocks.empty.id;
 
-    const worldX = this.position.x + x;
-    const worldZ = this.position.z + z;
-    const block = this.world.getBlock(worldX, y, worldZ);
-    return block ? block.id : blocks.empty.id;
+    const id = this.world.getBlockId(
+      this.position.x + x,
+      y,
+      this.position.z + z,
+    );
+    return id === UNLOADED ? blocks.empty.id : id;
   }
 
   /**
@@ -594,9 +576,7 @@ export class Chunk extends THREE.Group {
    */
   setBlockId(x, y, z, block) {
     if (this.inBounds(x, y, z)) {
-      const b = this.data.get(Chunk.dataKey(x, y, z));
-      b.id = block.id;
-      b.state = block.state;
+      this.chunkData.set(x, y, z, block.id);
     }
   }
 
@@ -609,8 +589,14 @@ export class Chunk extends THREE.Group {
    */
   setBlockInstanceId(x, y, z, instanceId) {
     if (this.inBounds(x, y, z)) {
-      this.data.get(Chunk.dataKey(x, y, z)).instanceId = instanceId;
+      this.instanceIds[blockIndex(x, y, z)] = instanceId;
     }
+  }
+
+  getInstanceId(x, y, z) {
+    return this.inBounds(x, y, z)
+      ? this.instanceIds[blockIndex(x, y, z)]
+      : NO_INSTANCE;
   }
 
   /**
@@ -621,18 +607,7 @@ export class Chunk extends THREE.Group {
    * @returns {boolean}
    */
   inBounds(x, y, z) {
-    if (
-      x >= 0 &&
-      x < this.size.width &&
-      y >= this.size.minY &&
-      y < this.size.maxY &&
-      z >= 0 &&
-      z < this.size.width
-    ) {
-      return true;
-    } else {
-      return false;
-    }
+    return inLocalBounds(x, y, z);
   }
 
   /**

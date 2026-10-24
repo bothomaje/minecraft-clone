@@ -1,5 +1,6 @@
 import { CONFIG } from '../app/config';
 import { state } from '../app/state';
+import { mergeInto } from '../engine/persistence/mergeParams';
 
 export class PersistenceSystem {
   constructor(world, player) {
@@ -29,7 +30,7 @@ export class PersistenceSystem {
     );
     localStorage.setItem(
       CONFIG.world.persistenceKeys.data,
-      JSON.stringify(this.world.dataStore.data),
+      JSON.stringify(this.world.dataStore.serialize()),
     );
     localStorage.setItem(
       CONFIG.world.persistenceKeys.inventory,
@@ -55,10 +56,17 @@ export class PersistenceSystem {
       return;
     }
 
-    this.world.params = JSON.parse(parameters);
-    this.world.dataStore.data = JSON.parse(data);
-    if (inventory) {
-      this.player.inventory.restore(JSON.parse(inventory));
+    const savedParams = this.readJson(parameters);
+    const savedInventory = inventory ? this.readJson(inventory) : null;
+
+    if (!savedParams || !this.world.dataStore.restore(this.readJson(data))) {
+      this.showMessage('Save data is corrupted');
+      return;
+    }
+
+    mergeInto(this.world.params, savedParams);
+    if (savedInventory) {
+      this.player.inventory.restore(savedInventory);
     }
 
     this.showMessage('Game loaded');
@@ -70,5 +78,13 @@ export class PersistenceSystem {
     setTimeout(() => {
       state.status = '';
     }, 3000);
+  }
+
+  readJson(text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
   }
 }

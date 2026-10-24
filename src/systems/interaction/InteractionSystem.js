@@ -138,8 +138,9 @@ export class InteractionSystem {
   }
 
   startMining(position, key) {
-    const block = this.world.getBlock(position.x, position.y, position.z);
-    const blockType = block && blocksById.get(block.id);
+    const blockType = blocksById.get(
+      this.world.getBlockId(position.x, position.y, position.z),
+    );
 
     if (!blockType) {
       this.mining = null;

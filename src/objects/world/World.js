@@ -1,7 +1,14 @@
 import * as THREE from 'three';
 import { Chunk } from './Chunk';
-import { DataStore } from '../../utils/DataStore';
 import { CONFIG } from '../../app/config';
+import { DataStore } from '../../engine/persistence/DataStore';
+import { EMPTY_ID, UNLOADED } from '../../engine/world/ChunkData';
+import {
+  inYRange,
+  worldToBlock,
+  worldToChunkAxis,
+  worldToLocalAxis,
+} from '../../engine/world/coords';
 
 export class World extends THREE.Group {
   asyncLoading = CONFIG.world.asyncLoading;
@@ -60,11 +67,12 @@ export class World extends THREE.Group {
   getVisibleChunks(player) {
     const visibleChunks = [];
 
-    const coords = this.worldToChunkCoords(
+    const feet = worldToBlock(
       player.position.x,
       player.position.y,
       player.position.z,
     );
+    const coords = this.worldToChunkCoords(feet.x, feet.y, feet.z);
 
     const chunkX = coords.chunk.x;
     const chunkZ = coords.chunk.z;
@@ -130,6 +138,7 @@ export class World extends THREE.Group {
     this.add(chunk);
 
     const onGenerated = () => {
+      if (this.chunksMap.get(World.chunkKey(x, z)) !== chunk) return;
       chunk.generate();
       this.refreshChunkBorders(x, z);
     };
@@ -178,21 +187,31 @@ export class World extends THREE.Group {
   }
 
   /**
-   * Gets the block data at (x, y, z)
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @returns {{id: number, instanceId: number, state: {...}} | null}
+   * Block id at integer world block coordinates (x, y, z)
+   *  - EMPTY_ID above and below the world
+   *  - UNLOADED if the chunk is missing or still generating
    */
-  getBlock(x, y, z) {
-    const resolved = this.resolveBlock(x, y, z);
-    if (!resolved) return null;
+  getBlockId(x, y, z) {
+    if (!inYRange(y)) return EMPTY_ID;
 
-    return resolved.chunk.getBlock(
+    const resolved = this.resolveBlock(x, y, z);
+    if (!resolved) return UNLOADED;
+
+    return resolved.chunk.chunkData.get(
       resolved.block.x,
       resolved.block.y,
       resolved.block.z,
     );
+  }
+
+  /** True if the chunk containing the continuous position (x, z) has finished generating */
+  isLoadedAt(x, z) {
+    const block = worldToBlock(x, 0, z);
+    const chunk = this.getChunk(
+      worldToChunkAxis(block.x),
+      worldToChunkAxis(block.z),
+    );
+    return chunk?.loaded === true;
   }
 
   /**
@@ -208,16 +227,8 @@ export class World extends THREE.Group {
    * }}
    */
   worldToChunkCoords(x, y, z) {
-    const chunkCoords = {
-      x: Math.floor(x / this.chunkSize.width),
-      z: Math.floor(z / this.chunkSize.width),
-    };
-
-    const blockCoords = {
-      x: x - this.chunkSize.width * chunkCoords.x,
-      y,
-      z: z - this.chunkSize.width * chunkCoords.z,
-    };
+    const chunkCoords = { x: worldToChunkAxis(x), z: worldToChunkAxis(z) };
+    const blockCoords = { x: worldToLocalAxis(x), y, z: worldToLocalAxis(z) };
 
     return {
       chunk: chunkCoords,

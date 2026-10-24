@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CHUNK_WIDTH, MAX_Y, MIN_Y } from '../engine/world/constants';
 
 export const CONFIG = {
   renderer: {
@@ -129,9 +130,9 @@ export const CONFIG = {
     headroom: 64,
     regenerateDebounceMs: 200,
     chunkSize: {
-      width: 16,
-      minY: -8,
-      maxY: 32,
+      width: CHUNK_WIDTH,
+      minY: MIN_Y,
+      maxY: MAX_Y,
     },
     params: {
       seed: 0,
