@@ -11,7 +11,7 @@ export class SoundManager {
   }
 
   /**
-   * @param {{ sounds?: Record<string, string> }} emitter
+   *
    * @param {string} eventName
    */
   play(emitter, eventName) {

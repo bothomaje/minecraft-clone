@@ -16,6 +16,7 @@ import {
   blockIndex,
   indexToLocal,
 } from '../../engine/world/coords';
+import { setBlockMatrix } from '../../render/blockTransform';
 
 const geometry = new THREE.BoxGeometry();
 const NO_INSTANCE = -1;
@@ -341,8 +342,14 @@ export class Chunk extends THREE.Group {
           const blockId = this.getBlockId(x, y, z);
           const mesh = meshes[blockId];
           const instanceId = mesh.count;
-
-          matrix.setPosition(x, y, z);
+          setBlockMatrix(
+            matrix,
+            x,
+            y,
+            z,
+            blocksById.get(blockId),
+            this.chunkData.getState(x, y, z),
+          );
           mesh.setMatrixAt(instanceId, matrix);
           this.setBlockInstanceId(x, y, z, instanceId);
           mesh.count++;
@@ -544,8 +551,14 @@ export class Chunk extends THREE.Group {
       this.setBlockInstanceId(x, y, z, instanceId);
 
       // Compute the transformation matrix for the new instance and update the instanced mesh
-      const matrix = new THREE.Matrix4();
-      matrix.setPosition(x, y, z);
+      const matrix = setBlockMatrix(
+        new THREE.Matrix4(),
+        x,
+        y,
+        z,
+        blocksById.get(blockId),
+        this.chunkData.getState(x, y, z),
+      );
       mesh.setMatrixAt(instanceId, matrix);
       mesh.instanceMatrix.needsUpdate = true;
       mesh.computeBoundingSphere();
