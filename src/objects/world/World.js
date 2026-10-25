@@ -197,7 +197,20 @@ export class World extends THREE.Group {
     const resolved = this.resolveBlock(x, y, z);
     if (!resolved) return UNLOADED;
 
-    return resolved.chunk.chunkData.get(
+    return resolved.chunk.chunkData.getId(
+      resolved.block.x,
+      resolved.block.y,
+      resolved.block.z,
+    );
+  }
+
+  getBlockState(x, y, z) {
+    if (!inYRange(y)) return 0;
+
+    const resolved = this.resolveBlock(x, y, z);
+    if (!resolved) return 0;
+
+    return resolved.chunk.chunkData.getState(
       resolved.block.x,
       resolved.block.y,
       resolved.block.z,
@@ -261,7 +274,7 @@ export class World extends THREE.Group {
    * @param {number} z
    * @param {number} blockId
    */
-  addBlock(x, y, z, block) {
+  addBlock(x, y, z, block, state = 0) {
     const resolved = this.resolveBlock(x, y, z);
     if (!resolved) return;
 
@@ -270,6 +283,7 @@ export class World extends THREE.Group {
       resolved.block.y,
       resolved.block.z,
       block,
+      state,
     );
 
     // Hide adjacent neighbours if they are now hidden

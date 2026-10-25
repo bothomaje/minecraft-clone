@@ -1,27 +1,47 @@
+import * as THREE from 'three';
 import { CONFIG } from '../../app/config';
+import { packState } from '../blocks/blockState';
 import {
   blocksById,
   placeableBlockByItem,
 } from '../../objects/blocks/blocksRegistry';
 import { rollBlockDrops } from '../../objects/items/ItemRegistry';
 import { Raycaster } from './Raycaster';
+import { Player } from '../../objects/entities/Player';
+import { World } from '../../objects/world/World';
+import { SoundManager } from '../../loaders/SoundManager';
+import { BlockHit } from './BlockHit';
+import { Block } from '../blocks/blockParams';
 
 const MOUSE_BUTTON = {
   LEFT: 0,
   RIGHT: 2,
 };
 
+interface MiningState {
+  key: string;
+  elapsed: number;
+  requiredTime: number;
+  lastSoundTick: number;
+  position: THREE.Vector3;
+  blockType: Block;
+}
+
 export class InteractionSystem {
+  player: Player;
+  world: World;
+  sounds: SoundManager;
+  hit: BlockHit | null = null;
+  mining: MiningState | null = null;
+
   raycaster = new Raycaster();
-  hit = null;
-  mining = null;
   leftMouseDown = false;
 
-  static blockKey(pos) {
+  static blockKey(pos: THREE.Vector3) {
     return `${pos.x},${pos.y},${pos.z}`;
   }
 
-  constructor(player, world, sounds) {
+  constructor(player: Player, world: World, sounds: SoundManager) {
     this.player = player;
     this.world = world;
     this.sounds = sounds;
@@ -35,10 +55,8 @@ export class InteractionSystem {
    * Updates interaction state
    * @param {number} dt
    */
-  update(dt) {
-    this.hit = this.player.controls.isLocked
-      ? this.raycaster.cast(this.world, this.player.camera)
-      : null;
+  update(dt: number) {
+    this.hit = this.raycaster.cast(this.world, this.player.camera);
 
     if (!this.hit) {
       this.player.hideSelection();
@@ -64,7 +82,7 @@ export class InteractionSystem {
     }
   }
 
-  onMouseDown(event) {
+  onMouseDown(event: MouseEvent) {
     if (!this.player.controls.isLocked) return;
 
     if (event.button === MOUSE_BUTTON.LEFT) {
@@ -74,14 +92,14 @@ export class InteractionSystem {
     }
   }
 
-  onMouseUp(event) {
+  onMouseUp(event: MouseEvent) {
     if (event.button === MOUSE_BUTTON.LEFT) {
       this.leftMouseDown = false;
       this.cancelMining();
     }
   }
 
-  onContextMenu(event) {
+  onContextMenu(event: MouseEvent) {
     if (this.player.controls.isLocked) event.preventDefault();
   }
 
@@ -98,8 +116,9 @@ export class InteractionSystem {
     return placeableBlockByItem.get(stack.item) ?? null;
   }
 
-  updateBreaking(dt) {
-    const pos = this.hit.blockPosition;
+  updateBreaking(dt: number) {
+    const pos = this.hit?.blockPosition;
+    if (!pos) return;
     const key = InteractionSystem.blockKey(pos);
 
     if (!this.mining || this.mining.key !== key) {
@@ -137,7 +156,7 @@ export class InteractionSystem {
     }
   }
 
-  startMining(position, key) {
+  startMining(position: THREE.Vector3, key: string) {
     const blockType = blocksById.get(
       this.world.getBlockId(position.x, position.y, position.z),
     );
@@ -158,6 +177,7 @@ export class InteractionSystem {
   }
 
   finishMining() {
+    if (!this.mining) return;
     const { position, blockType } = this.mining;
 
     this.world.removeBlock(position.x, position.y, position.z);
@@ -173,7 +193,7 @@ export class InteractionSystem {
     this.player.hideCrack();
   }
 
-  getMiningTime(block) {
+  getMiningTime(block: Block) {
     const hasCorrectTool =
       !block.requiredTool || block.requiredTool === this.player.tool.type;
     const multiplier = hasCorrectTool
@@ -183,7 +203,7 @@ export class InteractionSystem {
     return (block.hardness * CONFIG.mining.secondsPerHardness) / multiplier;
   }
 
-  handleDrops(block) {
+  handleDrops(block: Block) {
     const stacks = rollBlockDrops(block);
 
     for (const stack of stacks) {
@@ -195,6 +215,7 @@ export class InteractionSystem {
   }
 
   updatePlacementPreview() {
+    if (!this.hit) return;
     const placementPos = this.hit.placementPosition;
 
     if (this.overlapsPlayer(placementPos)) {
@@ -234,19 +255,15 @@ export class InteractionSystem {
     this.player.inventory.removeItem(stack.item, 1);
   }
 
-  getPlacementState(block, normal) {
-    if (!block?.state) return undefined;
+  getPlacementState(block: Block, normal: THREE.Vector3) {
+    if (!block.stateSchema?.axis) return 0;
 
-    if ('axis' in block.state) {
-      const axis =
-        Math.abs(normal.x) === 1 ? 'x' : Math.abs(normal.z) === 1 ? 'z' : 'y';
-      return { ...block.state, axis };
-    }
-
-    return block.state;
+    const axis =
+      Math.abs(normal.x) === 1 ? 'x' : Math.abs(normal.z) === 1 ? 'z' : 'y';
+    return packState(block.stateSchema, { axis });
   }
 
-  overlapsPlayer(position) {
+  overlapsPlayer(position: THREE.Vector3) {
     const dx = Math.abs(position.x - this.player.position.x);
     const dz = Math.abs(position.z - this.player.position.z);
     const withinXZ =

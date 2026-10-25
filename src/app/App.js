@@ -11,7 +11,7 @@ import { Hud } from '../ui/Hud';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import { ResizeSystem } from '../systems/ResizeSystem';
 import { InputSystem } from '../systems/InputSystem';
-import { InteractionSystem } from '../systems/interaction/InteractionSystem';
+import { InteractionSystem } from '../engine/interaction/InteractionSystem';
 import { PersistenceSystem } from '../systems/PersistenceSystem';
 import { createDebugGui } from '../ui/DebugGui';
 import { SoundManager } from '../loaders/SoundManager';
