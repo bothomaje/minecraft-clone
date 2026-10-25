@@ -4,7 +4,12 @@ import { RNG } from '../../utils/Rng';
 import { blocks, blocksById, resources } from '../blocks/blocksRegistry';
 import { CONFIG } from '../../app/config';
 import { getBiome } from './Biome';
-import { ChunkData, UNLOADED } from '../../engine/world/ChunkData';
+import {
+  ChunkData,
+  packEdit,
+  UNLOADED,
+  unpackEdit,
+} from '../../engine/world/ChunkData';
 import { CHUNK_VOLUME } from '../../engine/world/constants';
 import {
   inLocalBounds,
@@ -253,11 +258,12 @@ export class Chunk extends THREE.Group {
     const edits = this.dataStore.chunkEdits(this.chunkX, this.chunkZ);
     if (!edits) return;
 
-    for (const [index, id] of edits) {
+    for (const [index, value] of edits) {
+      const { id, state } = unpackEdit(value);
       const block = blocksById.get(id);
       if (!block) continue;
       const { x, y, z } = indexToLocal(index);
-      this.setBlockId(x, y, z, block);
+      this.setBlockId(x, y, z, block, state);
     }
   }
 
@@ -418,18 +424,18 @@ export class Chunk extends THREE.Group {
    * @param {number} z
    * @param {{id: number, instanceId: number, state: {}}} block
    */
-  addBlock(x, y, z, block) {
+  addBlock(x, y, z, block, state = 0) {
     if (
       this.inBounds(x, y, z) &&
       this.getBlockId(x, y, z) === blocks.empty.id
     ) {
-      this.setBlockId(x, y, z, block);
+      this.setBlockId(x, y, z, block, state);
       this.addBlockInstance(x, y, z);
       this.dataStore.set(
         this.chunkX,
         this.chunkZ,
         blockIndex(x, y, z),
-        block.id,
+        packEdit(block.id, state),
       );
     }
   }
@@ -451,7 +457,7 @@ export class Chunk extends THREE.Group {
         this.chunkX,
         this.chunkZ,
         blockIndex(x, y, z),
-        blocks.empty.id,
+        packEdit(blocks.empty.id, 0),
       );
     }
   }
@@ -555,7 +561,7 @@ export class Chunk extends THREE.Group {
    */
   getBlockId(x, y, z) {
     if (this.inBounds(x, y, z)) {
-      return this.chunkData.get(x, y, z);
+      return this.chunkData.getId(x, y, z);
     }
     if (!this.world) return blocks.empty.id;
 
@@ -574,9 +580,9 @@ export class Chunk extends THREE.Group {
    * @param {number} z
    * @param {{id: number, instanceId: number, state: {...}} | null} block
    */
-  setBlockId(x, y, z, block) {
+  setBlockId(x, y, z, block, state = 0) {
     if (this.inBounds(x, y, z)) {
-      this.chunkData.set(x, y, z, block.id);
+      this.chunkData.set(x, y, z, block.id, state);
     }
   }
 

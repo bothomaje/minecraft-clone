@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { textures } from '../../loaders/TextureManager';
 import { items } from '../items/ItemRegistry';
+import { assertValidSchema } from '../../engine/blocks/BlockState';
 
 const BlockCategory = {
   SOLID: 'solid',
@@ -165,6 +166,7 @@ export const blocks = {
     solid: true,
     opaque: true,
     hardness: 2,
+    stateSchema: { axis: ['y', 'x', 'z'] },
     material: [
       new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
       new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
@@ -183,7 +185,6 @@ export const blocks = {
     solid: true,
     opaque: false,
     hardness: 0.2,
-    state: { axis: 'y' },
     material: new THREE.MeshLambertMaterial({
       map: textures.leaves.oak,
       color: 0x79c05a,
@@ -227,7 +228,7 @@ export const blocks = {
     solid: true,
     opaque: true,
     hardness: 2,
-    state: { axis: 'y' },
+    stateSchema: { axis: ['y', 'x', 'z'] },
     material: [
       new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
       new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
@@ -254,6 +255,10 @@ export const blocks = {
     drops: [{ item: items.jungleLeaves, count: 1, chance: 0.05 }],
   },
 };
+
+for (const block of Object.values(blocks)) {
+  if (block.stateSchema) assertValidSchema(block.name, block.stateSchema);
+}
 
 export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),

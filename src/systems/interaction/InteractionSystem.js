@@ -1,4 +1,5 @@
 import { CONFIG } from '../../app/config';
+import { packState } from '../../engine/blocks/BlockState';
 import {
   blocksById,
   placeableBlockByItem,
@@ -235,15 +236,11 @@ export class InteractionSystem {
   }
 
   getPlacementState(block, normal) {
-    if (!block?.state) return undefined;
+    if (!block.stateSchema?.axis) return 0;
 
-    if ('axis' in block.state) {
-      const axis =
-        Math.abs(normal.x) === 1 ? 'x' : Math.abs(normal.z) === 1 ? 'z' : 'y';
-      return { ...block.state, axis };
-    }
-
-    return block.state;
+    const axis =
+      Math.abs(normal.x) === 1 ? 'x' : Math.abs(normal.z) === 1 ? 'z' : 'y';
+    return packState(block.stateSchema, { axis });
   }
 
   overlapsPlayer(position) {
