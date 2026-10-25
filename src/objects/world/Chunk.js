@@ -1,9 +1,6 @@
 import * as THREE from 'three';
-import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
-import { RNG } from '../../utils/Rng';
-import { blocks, blocksById, resources } from '../blocks/blocksRegistry';
+import { blocks, blocksById } from '../blocks/blocksRegistry';
 import { CONFIG } from '../../app/config';
-import { getBiome } from './Biome';
 import {
   ChunkData,
   packEdit,
@@ -17,6 +14,7 @@ import {
   indexToLocal,
 } from '../../engine/world/coords';
 import { setBlockMatrix } from '../../render/blockTransform';
+import { generateChunkData } from '../../engine/world/worldGenerator';
 
 const geometry = new THREE.BoxGeometry();
 const NO_INSTANCE = -1;
@@ -51,10 +49,12 @@ export class Chunk extends THREE.Group {
    * Generates the world data and meshes
    */
   generate() {
-    const rng = new RNG(this.world.params.seed);
     this.initializeTerrain();
-    this.generateTerrain(rng);
-    this.generateClouds(rng);
+    this.chunkData = generateChunkData(
+      this.world.params,
+      this.position.x,
+      this.position.z,
+    );
     this.loadPlayerChanges();
     this.generateMeshes();
     this.loaded = true;
@@ -66,190 +66,6 @@ export class Chunk extends THREE.Group {
   initializeTerrain() {
     this.chunkData.clear();
     this.instanceIds.fill(NO_INSTANCE);
-  }
-
-  /**
-   * Generates the terrain data for the world
-   * @param {RNG} rng
-   */
-  generateTerrain(rng) {
-    const simplex = new SimplexNoise(rng);
-
-    for (let x = 0; x < this.size.width; x++) {
-      for (let z = 0; z < this.size.width; z++) {
-        const biome = getBiome(
-          simplex,
-          this.position.x,
-          this.position.z,
-          x,
-          z,
-          this.world.params,
-        );
-
-        // Compute the noise value at this x-z location
-        const value = simplex.noise(
-          (this.position.x + x) / this.world.params.terrain.scale,
-          (this.position.z + z) / this.world.params.terrain.scale,
-        );
-
-        // Scale the noise based on the magnitude/offset
-        const scaledNoise =
-          this.world.params.terrain.offset +
-          this.world.params.terrain.magnitude * value;
-
-        // Computing the height of the terrain at this x-z location
-        let height = Math.floor(scaledNoise);
-
-        // Clamping height between 0 and max height
-        height = Math.max(this.size.minY, Math.min(height, this.size.maxY - 1));
-
-        // Fill in all blocks at or below the terrain height
-        for (let y = this.size.maxY; y >= this.size.minY; y--) {
-          if (y <= this.world.params.terrain.waterLevel && y === height) {
-            this.setBlockId(x, y, z, blocks.sand);
-          } else if (y === height) {
-            let blockType;
-            if (biome === 'Desert') {
-              blockType = blocks.sand;
-            } else if (biome === 'Temperate' || biome === 'Jungle') {
-              blockType = blocks.grassBlock;
-            } else if (biome === 'Tundra') {
-              blockType = blocks.snow;
-            }
-            this.setBlockId(x, y, z, blockType);
-
-            if (rng.random() < this.world.params.trees.frequency) {
-              this.generateTree(rng, biome, x, height + 1, z);
-            }
-          } else if (
-            y < height &&
-            this.getBlockId(x, y, z) === blocks.empty.id
-          ) {
-            this.generateResource(simplex, x, y, z);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Determines if a resource block should be generated at (x, y, z)
-   * @param {SimplexNoise} simplex
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   */
-  generateResource(simplex, x, y, z) {
-    this.setBlockId(x, y, z, blocks.dirt);
-
-    resources.forEach((resource) => {
-      const value = simplex.noise3d(
-        (this.position.x + x) / resource.scale.x,
-        (this.position.y + y) / resource.scale.y,
-        (this.position.z + z) / resource.scale.z,
-      );
-
-      if (value > resource.scarcity) {
-        this.setBlockId(x, y, z, resource);
-      }
-    });
-  }
-
-  /**
-   * Populate the world with trees
-   * @param {RNG} rng
-   * @param {string} biome
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   */
-  generateTree(rng, biome, x, y, z) {
-    const minHeight = this.world.params.trees.trunk.minHeight;
-    const maxHeight = this.world.params.trees.trunk.maxHeight;
-    const height = Math.round(
-      minHeight + (maxHeight - minHeight) * rng.random(),
-    );
-
-    // Tree trunk starts here
-    for (let treeY = y; treeY <= y + height; treeY++) {
-      if (biome === 'Temperate' || biome === 'Tundra') {
-        this.setBlockId(x, treeY, z, blocks.oakLog);
-      } else if (biome === 'Jungle') {
-        this.setBlockId(x, treeY, z, blocks.jungleLog);
-      } else if (biome === 'Desert') {
-        this.setBlockId(x, treeY, z, blocks.cactus);
-      }
-    }
-    if (biome === 'Temperate' || biome === 'Jungle') {
-      this.generateTreeCanopy(biome, x, y + height, z, rng);
-    }
-  }
-
-  /**
-   * Generate the canopy for a tree
-   * @param {string} biome
-   * @param {number} centreX
-   * @param {number} centreY
-   * @param {number} centreZ
-   * @param {RNG} rng
-   */
-  generateTreeCanopy = (biome, centreX, centreY, centreZ, rng) => {
-    const minRadius = this.world.params.trees.canopy.minRadius;
-    const maxRadius = this.world.params.trees.canopy.maxRadius;
-    const radius = Math.round(
-      minRadius + (maxRadius - minRadius) * rng.random(),
-    );
-
-    for (let x = -radius; x <= radius; x++) {
-      for (let y = -radius; y <= radius; y++) {
-        for (let z = -radius; z <= radius; z++) {
-          const n = rng.random();
-
-          if (x * x + y * y + z * z >= radius * radius) continue;
-
-          if (n < this.world.params.trees.canopy.density) {
-            if (biome === 'Temperate') {
-              this.setBlockId(
-                centreX + x,
-                centreY + y,
-                centreZ + z,
-                blocks.oakLeaves,
-              );
-            } else if (biome === 'Jungle') {
-              this.setBlockId(
-                centreX + x,
-                centreY + y,
-                centreZ + z,
-                blocks.jungleLeaves,
-              );
-            }
-          }
-        }
-      }
-    }
-  };
-
-  /**
-   * Creates happy little clouds
-   * @param {RNG} rng
-   */
-  generateClouds(rng) {
-    const simplex = new SimplexNoise(rng);
-    for (let x = 0; x < this.size.width; x++) {
-      for (let z = 0; z < this.size.width; z++) {
-        const value =
-          (simplex.noise(
-            (this.position.x + x) / this.world.params.clouds.scale,
-            (this.position.z + z) / this.world.params.clouds.scale,
-          ) +
-            1) *
-          0.5;
-
-        if (value < this.world.params.clouds.density) {
-          this.setBlockId(x, this.size.maxY - 1, z, blocks.cloud);
-        }
-      }
-    }
   }
 
   /**

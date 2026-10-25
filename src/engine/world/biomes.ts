@@ -1,3 +1,7 @@
+import { SimplexNoise } from 'three/examples/jsm/Addons.js';
+import { WorldParams } from './WorldParams';
+
+export type BiomeName = 'Tundra' | 'Temperate' | 'Jungle' | 'Desert';
 /**
  * Get the biome at the world coordinates (x,z)
  * @param {SimplexNoise} simplex
@@ -7,7 +11,14 @@
  * @param {number} blockZ
  * @param {object} params
  */
-export function getBiome(simplex, chunkX, chunkZ, blockX, blockZ, params) {
+export function getBiome(
+  simplex: SimplexNoise,
+  chunkX: number,
+  chunkZ: number,
+  blockX: number,
+  blockZ: number,
+  params: WorldParams,
+): BiomeName {
   // Compute the noise value at this x-z location
   let noise =
     0.5 *
