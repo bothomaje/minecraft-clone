@@ -1,5 +1,5 @@
 import { CONFIG } from '../../app/config';
-import { packState } from '../../engine/blocks/BlockState';
+import { packState } from '../../engine/blocks/blockState';
 import {
   blocksById,
   placeableBlockByItem,

@@ -1,279 +1,38 @@
-import * as THREE from 'three';
-import { textures } from '../../loaders/TextureManager';
 import { items } from '../items/ItemRegistry';
-import { assertValidSchema } from '../../engine/blocks/BlockState';
+import { assertValidSchema } from '../../engine/blocks/blockState';
+import { blockParams } from '../../engine/blocks/blockParams';
+import { blockMaterials } from '../../render/blockMaterials';
 
-const BlockCategory = {
-  SOLID: 'solid',
-  TRANSPARENT: 'transparent',
-  CUTOUT: 'cutout',
-  LIQUID: 'liquid',
-  NON_SOLID: 'non_solid',
-};
+export const blocks = Object.fromEntries(
+  Object.entries(blockParams).map(([key, params]) => [
+    key,
+    { ...params, material: blockMaterials[key]?.material },
+  ]),
+);
 
-function getSoundSet(blockName) {
-  return {
-    place: `sounds/block/${blockName}/place.ogg`,
-    break: `sounds/block/${blockName}/break.ogg`,
-    broken: `sounds/block/${blockName}/broken.ogg`,
-  };
-}
-
-const sounds = {
-  dirt: getSoundSet('dirt'),
-  grass: getSoundSet('grass'),
-  sand: getSoundSet('sand'),
-  snow: getSoundSet('snow'),
-  stone: getSoundSet('stone'),
-  wood: getSoundSet('wood'),
-  wool: getSoundSet('wool'),
-};
-
-export const blocks = {
-  empty: {
-    id: 0,
-    name: 'empty',
-    category: BlockCategory.NON_SOLID,
-    solid: false,
-    opaque: false,
-    hardness: 0,
-    drops: [],
-  },
-  stone: {
-    id: 1,
-    name: 'stone',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 1.5,
-    gravity: false,
-    requiredTool: 'pickaxe',
-    color: 0x808080,
-    scale: { x: 30, y: 30, z: 30 },
-    scarcity: 0.5,
-    material: new THREE.MeshLambertMaterial({ map: textures.stone }),
-    sounds: sounds.stone,
-    drops: [{ item: items.cobblestone, count: 1 }],
-  },
-  grassBlock: {
-    id: 2,
-    name: 'grass_block',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 0.6,
-    gravity: false,
-    color: 0x559020,
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // right
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // left
-      new THREE.MeshLambertMaterial({
-        map: textures.grassBlock.top,
-        color: 0x79c05a,
-      }), // top
-      new THREE.MeshLambertMaterial({ map: textures.dirt }), // bottom
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // front
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // back
-    ],
-    sounds: sounds.grass,
-    drops: [{ item: items.dirt, count: 1 }],
-  },
-  dirt: {
-    id: 3,
-    name: 'dirt',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 0.5,
-    gravity: false,
-    color: 0x807020,
-    material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
-    sounds: sounds.dirt,
-    drops: [{ item: items.dirt, count: 1 }],
-  },
-  cobblestone: {
-    id: 4,
-    name: 'cobblestone',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 1.5,
-    gravity: false,
-    requiredTool: 'pickaxe',
-    color: 0x808080,
-    scale: { x: 30, y: 30, z: 30 },
-    scarcity: 0.5,
-    material: new THREE.MeshLambertMaterial({ map: textures.cobblestone }),
-    sounds: sounds.stone,
-    drops: [{ item: items.cobblestone, count: 1 }],
-  },
-  cloud: {
-    id: 9,
-    name: 'cloud',
-    category: BlockCategory.NON_SOLID,
-    solid: false,
-    opaque: false,
-    hardness: 0,
-    material: new THREE.MeshBasicMaterial({ color: 0xf0f0f0 }),
-    drops: [],
-  },
-  sand: {
-    id: 12,
-    name: 'sand',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 0.5,
-    gravity: true,
-    material: new THREE.MeshLambertMaterial({ map: textures.sand }),
-    sounds: sounds.sand,
-    drops: [{ item: items.sand, count: 1 }],
-  },
-  ironOre: {
-    id: 15,
-    name: 'iron_ore',
-    color: 0x806060,
-    scale: { x: 60, y: 60, z: 60 },
-    scarcity: 0.9,
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 3,
-    requiredTool: 'stonePickaxe',
-    material: new THREE.MeshLambertMaterial({ map: textures.ore.iron }),
-    sounds: sounds.stone,
-    drops: [{ item: items.ironOre, count: 1 }],
-  },
-  coalOre: {
-    id: 16,
-    name: 'coal_ore',
-    color: 0x202020,
-    scale: { x: 20, y: 20, z: 20 },
-    scarcity: 0.8,
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 3,
-    requiredTool: 'pickaxe',
-    material: new THREE.MeshLambertMaterial({ map: textures.ore.coal }),
-    sounds: sounds.stone,
-    drops: [{ item: items.coal, count: 1 }],
-  },
-  oakLog: {
-    id: 17,
-    name: 'oak_log',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 2,
-    stateSchema: { axis: ['y', 'x', 'z'] },
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-    ],
-    sounds: sounds.wood,
-    drops: [{ item: items.oakLog, count: 1 }],
-  },
-  oakLeaves: {
-    id: 18,
-    name: 'oak_leaves',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: false,
-    hardness: 0.2,
-    material: new THREE.MeshLambertMaterial({
-      map: textures.leaves.oak,
-      color: 0x79c05a,
-    }),
-    sounds: sounds.grass,
-    drops: [{ item: items.oakLeaves, count: 1, chance: 0.05 }],
-  },
-  snow: {
-    id: 80,
-    name: 'snow',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 0.2,
-    material: new THREE.MeshLambertMaterial({ map: textures.snow }),
-    sounds: sounds.snow,
-    drops: [{ item: items.snow, count: 1 }],
-  },
-  cactus: {
-    id: 81,
-    name: 'cactus',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 0.4,
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.top }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.top }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-    ],
-    sounds: sounds.wool,
-    drops: [{ item: items.cactus, count: 1 }],
-  },
-  jungleLog: {
-    id: 571,
-    name: 'jungle_log',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: true,
-    hardness: 2,
-    stateSchema: { axis: ['y', 'x', 'z'] },
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-    ],
-    sounds: sounds.wood,
-    drops: [{ item: items.jungleLog, count: 1 }],
-  },
-  jungleLeaves: {
-    id: 572,
-    name: 'jungle_leaves',
-    category: BlockCategory.SOLID,
-    solid: true,
-    opaque: false,
-    hardness: 0.2,
-    material: new THREE.MeshLambertMaterial({
-      map: textures.leaves.jungle,
-      color: 0x79c05a,
-    }),
-    sounds: sounds.grass,
-    drops: [{ item: items.jungleLeaves, count: 1, chance: 0.05 }],
-  },
-};
-
-for (const block of Object.values(blocks)) {
+for (const block of Object.values(blockParams)) {
   if (block.stateSchema) assertValidSchema(block.name, block.stateSchema);
 }
 
 export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),
 );
-export const resources = [blocks.stone, blocks.coalOre, blocks.ironOre];
+
+export const resources = [
+  blockParams.stone,
+  blockParams.coalOre,
+  blockParams.ironOre,
+];
 
 export const placeableBlockByItem = new Map([
-  [items.dirt, blocks.dirt],
-  [items.cobblestone, blocks.stone],
-  [items.sand, blocks.sand],
-  [items.ironOre, blocks.ironOre],
-  [items.oakLog, blocks.oakLog],
-  [items.oakLeaves, blocks.oakLeaves],
-  [items.snow, blocks.snow],
-  [items.cactus, blocks.cactus],
-  [items.jungleLog, blocks.jungleLog],
-  [items.jungleLeaves, blocks.jungleLeaves],
+  [items.dirt, blockParams.dirt],
+  [items.cobblestone, blockParams.stone],
+  [items.sand, blockParams.sand],
+  [items.ironOre, blockParams.ironOre],
+  [items.oakLog, blockParams.oakLog],
+  [items.oakLeaves, blockParams.oakLeaves],
+  [items.snow, blockParams.snow],
+  [items.cactus, blockParams.cactus],
+  [items.jungleLog, blockParams.jungleLog],
+  [items.jungleLeaves, blockParams.jungleLeaves],
 ]);
