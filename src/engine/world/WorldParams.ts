@@ -2,6 +2,7 @@ export interface WorldParams {
   seed: number;
   terrain: {
     waterLevel: number;
+    soilDepth: number;
     baseHeight: number;
     continent: { scale: number; amplitude: number };
     hills: {
@@ -18,11 +19,9 @@ export interface WorldParams {
     };
   };
   biomes: {
-    scale: number;
-    variation: { amplitude: number; scale: number };
-    tundraToTemperate: number;
-    temperateToJungle: number;
-    jungleToDesert: number;
+    temperature: { scale: number };
+    humidity: { scale: number };
+    snowLine: number;
   };
   trees: {
     trunk: { minHeight: number; maxHeight: number };

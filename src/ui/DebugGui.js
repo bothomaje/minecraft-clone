@@ -32,6 +32,9 @@ export function createDebugGui(scene, world, player) {
     .add(world.params.terrain, 'waterLevel', 0, 60, 1)
     .name('Water Level');
   terrainFolder
+    .add(world.params.terrain, 'soilDepth', 1, 8, 1)
+    .name('Soil Depth');
+  terrainFolder
     .add(world.params.terrain, 'baseHeight', 0, 60, 1)
     .name('Base Height');
   const continentFolder = terrainFolder.addFolder('Continents').close();
@@ -67,22 +70,15 @@ export function createDebugGui(scene, world, player) {
     .name('Power');
 
   const biomesFolder = terrainFolder.addFolder('Biomes').close();
-  biomesFolder.add(world.params.biomes, 'scale', 10, 500).name('Scale');
   biomesFolder
-    .add(world.params.biomes.variation, 'amplitude', 10, 500)
-    .name('Variation Amplitude');
+    .add(world.params.biomes.temperature, 'scale', 50, 1500)
+    .name('Temperature Scale');
   biomesFolder
-    .add(world.params.biomes.variation, 'scale', 10, 500)
-    .name('Variation Scale');
+    .add(world.params.biomes.humidity, 'scale', 50, 1500)
+    .name('Humidity Scale');
   biomesFolder
-    .add(world.params.biomes, 'tundraToTemperate', 0, 1)
-    .name('Tundra -> Temperate');
-  biomesFolder
-    .add(world.params.biomes, 'temperateToJungle', 0, 1)
-    .name('Temperate -> Jungle');
-  biomesFolder
-    .add(world.params.biomes, 'jungleToDesert', 0, 1)
-    .name('Jungle -> Desert');
+    .add(world.params.biomes, 'snowLine', 20, 87, 1)
+    .name('Snow Line');
 
   const resourcesFolder = terrainFolder.addFolder('Resources').close();
   resources.forEach((resource) => {

@@ -18,11 +18,7 @@ export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),
 );
 
-export const resources = [
-  blockParams.stone,
-  blockParams.coalOre,
-  blockParams.ironOre,
-];
+export const resources = [blocks.coalOre, blocks.ironOre];
 
 export const placeableBlockByItem = new Map([
   [items.dirt, blockParams.dirt],

@@ -24,6 +24,9 @@ export const blockMaterials = {
   cobblestone: {
     material: new THREE.MeshLambertMaterial({ map: textures.cobblestone }),
   },
+  bedrock: {
+    material: new THREE.MeshLambertMaterial({ map: textures.bedrock }),
+  },
   cloud: {
     material: new THREE.MeshBasicMaterial({ color: 0xf0f0f0 }),
   },

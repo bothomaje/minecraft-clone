@@ -113,6 +113,16 @@ export const blockParams = {
     sounds: sounds.stone,
     drops: [{ item: 'cobblestone', count: 1 }],
   },
+  bedrock: {
+    id: 7,
+    name: 'bedrock',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: -1,
+    sounds: sounds.stone,
+    drops: [],
+  },
   cloud: {
     id: 9,
     name: 'cloud',
