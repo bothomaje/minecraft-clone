@@ -28,14 +28,43 @@ export function createDebugGui(scene, world, player) {
   terrainFolder.add(world, 'asyncLoading').name('Async Chunk Loading');
   terrainFolder.add(world, 'drawDistance', 0, 5, 1).name('Draw Distance');
   terrainFolder.add(world.params, 'seed', 1, 10000).name('Seed');
-  terrainFolder.add(world.params.terrain, 'scale', 10, 100).name('Scale');
   terrainFolder
-    .add(world.params.terrain, 'magnitude', 0, 32, 1)
-    .name('Magnitude');
-  terrainFolder.add(world.params.terrain, 'offset', 0, 32, 1).name('Offset');
-  terrainFolder
-    .add(world.params.terrain, 'waterLevel', 0, 32, 1)
+    .add(world.params.terrain, 'waterLevel', 0, 60, 1)
     .name('Water Level');
+  terrainFolder
+    .add(world.params.terrain, 'baseHeight', 0, 60, 1)
+    .name('Base Height');
+  const continentFolder = terrainFolder.addFolder('Continents').close();
+  continentFolder
+    .add(world.params.terrain.continent, 'scale', 50, 1500)
+    .name('Scale');
+  continentFolder
+    .add(world.params.terrain.continent, 'amplitude', 0, 40, 1)
+    .name('Amplitude');
+  const hillsFolder = terrainFolder.addFolder('Hills').close();
+  hillsFolder.add(world.params.terrain.hills, 'scale', 10, 300).name('Scale');
+  hillsFolder
+    .add(world.params.terrain.hills, 'amplitude', 0, 30, 1)
+    .name('Amplitude');
+  hillsFolder
+    .add(world.params.terrain.hills, 'octaves', 1, 6, 1)
+    .name('Octaves');
+  hillsFolder
+    .add(world.params.terrain.hills, 'persistence', 0.1, 0.9)
+    .name('Persistence');
+  const mountainsFolder = terrainFolder.addFolder('Mountains').close();
+  mountainsFolder
+    .add(world.params.terrain.mountains, 'scale', 50, 600)
+    .name('Scale');
+  mountainsFolder
+    .add(world.params.terrain.mountains, 'amplitude', 0, 80, 1)
+    .name('Amplitude');
+  mountainsFolder
+    .add(world.params.terrain.mountains, 'threshold', 0, 0.9)
+    .name('Threshold');
+  mountainsFolder
+    .add(world.params.terrain.mountains, 'power', 0.5, 4)
+    .name('Power');
 
   const biomesFolder = terrainFolder.addFolder('Biomes').close();
   biomesFolder.add(world.params.biomes, 'scale', 10, 500).name('Scale');
@@ -87,6 +116,9 @@ export function createDebugGui(scene, world, player) {
   const cloudsFolder = terrainFolder.addFolder('Clouds').close();
   cloudsFolder.add(world.params.clouds, 'scale', 0, 100).name('Cloud Size');
   cloudsFolder.add(world.params.clouds, 'density', 0, 1).name('Cloud Cover');
+  cloudsFolder
+    .add(world.params.clouds, 'height', 0, 87, 1)
+    .name('Cloud Height');
 
   let regenerateTimeout = null;
   gui.onChange(() => {

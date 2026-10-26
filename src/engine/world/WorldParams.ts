@@ -1,10 +1,21 @@
 export interface WorldParams {
   seed: number;
   terrain: {
-    scale: number;
-    magnitude: number;
-    offset: number;
     waterLevel: number;
+    baseHeight: number;
+    continent: { scale: number; amplitude: number };
+    hills: {
+      scale: number;
+      amplitude: number;
+      octaves: number;
+      persistence: number;
+    };
+    mountains: {
+      scale: number;
+      amplitude: number;
+      threshold: number;
+      power: number;
+    };
   };
   biomes: {
     scale: number;
@@ -18,5 +29,5 @@ export interface WorldParams {
     canopy: { minRadius: number; maxRadius: number; density: number };
     frequency: number;
   };
-  clouds: { scale: number; density: number };
+  clouds: { scale: number; density: number; height: number };
 }

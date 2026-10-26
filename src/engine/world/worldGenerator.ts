@@ -1,12 +1,13 @@
 import { SimplexNoise } from 'three/examples/jsm/Addons.js';
 import { RNG } from '../../utils/Rng';
 import { WorldParams } from './WorldParams';
-import { ChunkData } from './ChunkData';
+import { ChunkData, EMPTY_ID } from './ChunkData';
 import { CHUNK_WIDTH, MAX_Y, MIN_Y } from './constants';
 import { Block } from '../blocks/blockParams';
 import { inLocalBounds } from './coords';
 import { blocks, resources } from '../../objects/blocks/blocksRegistry';
 import { BiomeName, getBiome } from './biomes';
+import { hashRandom } from './hash';
 
 export function generateChunkData(
   params: WorldParams,
@@ -15,9 +16,11 @@ export function generateChunkData(
 ): ChunkData {
   const data = new ChunkData();
   const rng = new RNG(params.seed);
+  const noise = new SimplexNoise(rng);
 
-  generateTerrain(rng, params, data, x, z);
-  generateClouds(rng, params, data, x, z);
+  generateTerrain(params, data, noise, x, z);
+  generateTrees(data, params, noise, x, z);
+  generateClouds(noise, params, data, x, z);
 
   return data;
 }
@@ -42,40 +45,108 @@ function setBlock(
   }
 }
 
+function columnAt(
+  simplex: SimplexNoise,
+  params: WorldParams,
+  x: number,
+  z: number,
+) {
+  return {
+    biome: getBiome(simplex, x, z, params),
+    height: surfaceHeight(simplex, params, x, z),
+  };
+}
+
+const LAYER_OFFSET = { continent: 100, hills: 200, mountains: 300 };
+
+function fractalNoise(
+  simplex: SimplexNoise,
+  x: number,
+  z: number,
+  octaves: number,
+  persistence: number,
+): number {
+  let sum = 0;
+  let amplitude = 1;
+  let total = 0;
+  let frequency = 1;
+  for (let i = 0; i < octaves; i++) {
+    sum += amplitude * simplex.noise(x * frequency, z * frequency);
+    total += amplitude;
+    amplitude *= persistence;
+    frequency *= 2;
+  }
+  return sum / total;
+}
+
+function surfaceHeight(
+  simplex: SimplexNoise,
+  params: WorldParams,
+  x: number,
+  z: number,
+): number {
+  const { baseHeight, continent, hills, mountains, waterLevel } =
+    params.terrain;
+
+  const continentNoise = simplex.noise(
+    x / continent.scale + LAYER_OFFSET.continent,
+    z / continent.scale + LAYER_OFFSET.continent,
+  );
+  const hillNoise = fractalNoise(
+    simplex,
+    x / hills.scale + LAYER_OFFSET.hills,
+    z / hills.scale + LAYER_OFFSET.hills,
+    hills.octaves,
+    hills.persistence,
+  );
+  let height =
+    baseHeight +
+    continentNoise * continent.amplitude +
+    hillNoise * hills.amplitude;
+
+  // Mountains only rise on land: they fade in over the first few blocks above sea level
+  const mountainNoise = simplex.noise(
+    x / mountains.scale + LAYER_OFFSET.mountains,
+    z / mountains.scale + LAYER_OFFSET.mountains,
+  );
+  const mask = Math.max(
+    0,
+    (mountainNoise - mountains.threshold) / (1 - mountains.threshold),
+  );
+  const onLand = Math.min(1, Math.max(0, (height - waterLevel) / 8));
+  height += mask ** mountains.power * mountains.amplitude * onLand;
+
+  return Math.max(MIN_Y, Math.min(Math.floor(height), MAX_Y - 1));
+}
+
+export function surfaceHeightAt(
+  params: WorldParams,
+  x: number,
+  z: number,
+): number {
+  return surfaceHeight(new SimplexNoise(new RNG(params.seed)), params, x, z);
+}
+
 /**
  * Generates the terrain data for the world
  * @param {RNG} rng
  */
 function generateTerrain(
-  rng: RNG,
   params: WorldParams,
   data: ChunkData,
+  simplex: SimplexNoise,
   chunkX: number,
   chunkZ: number,
 ) {
-  const simplex = new SimplexNoise(rng);
-
   for (let x = 0; x < CHUNK_WIDTH; x++) {
     for (let z = 0; z < CHUNK_WIDTH; z++) {
-      const biome = getBiome(simplex, chunkX, chunkZ, x, z, params);
-
-      // Compute the noise value at this x-z location
-      const value = simplex.noise(
-        (chunkX + x) / params.terrain.scale,
-        (chunkZ + z) / params.terrain.scale,
+      const { biome, height } = columnAt(
+        simplex,
+        params,
+        chunkX + x,
+        chunkZ + z,
       );
 
-      // Scale the noise based on the magnitude/offset
-      const scaledNoise =
-        params.terrain.offset + params.terrain.magnitude * value;
-
-      // Computing the height of the terrain at this x-z location
-      let height = Math.floor(scaledNoise);
-
-      // Clamping height between 0 and max height
-      height = Math.max(MIN_Y, Math.min(height, MAX_Y - 1));
-
-      // Fill in all blocks at or below the terrain height
       for (let y = MAX_Y; y >= MIN_Y; y--) {
         if (y <= params.terrain.waterLevel && y === height) {
           setBlock(data, x, y, z, blocks.sand);
@@ -84,9 +155,6 @@ function generateTerrain(
 
         if (y === height) {
           setBlock(data, x, y, z, getSurfaceBlock(biome));
-          if (rng.random() < params.trees.frequency) {
-            generateTree(rng, params, data, biome, x, height + 1, z);
-          }
           continue;
         }
 
@@ -140,13 +208,12 @@ function generateResource(
  * @param {RNG} rng
  */
 function generateClouds(
-  rng: RNG,
+  simplex: SimplexNoise,
   params: WorldParams,
   data: ChunkData,
   chunkX: number,
   chunkZ: number,
 ) {
-  const simplex = new SimplexNoise(rng);
   for (let x = 0; x < CHUNK_WIDTH; x++) {
     for (let z = 0; z < CHUNK_WIDTH; z++) {
       const value =
@@ -157,83 +224,164 @@ function generateClouds(
           1) *
         0.5;
 
-      if (value < params.clouds.density) {
-        setBlock(data, x, MAX_Y - 1, z, blocks.cloud);
+      const { height } = params.clouds;
+      if (
+        value < params.clouds.density &&
+        data.getId(x, height, z) === EMPTY_ID
+      ) {
+        setBlock(data, x, height, z, blocks.cloud);
       }
     }
   }
 }
 
-/**
- * Populate the world with trees
- * @param {RNG} rng
- * @param {string} biome
- * @param {number} x
- * @param {number} y
- * @param {number} z
- */
-function generateTree(
-  rng: RNG,
+const SALT = { tree: 1, trunkHeight: 2, canopyRadius: 3, leaf: 100 };
+
+export interface Tree {
+  x: number;
+  z: number;
+  groundY: number;
+  biome: BiomeName;
+  trunkHeight: number;
+  canopyRadius: number;
+}
+
+export function collectTrees(
   params: WorldParams,
-  data: ChunkData,
-  biome: BiomeName,
+  simplex: SimplexNoise,
+  minX: number,
+  minZ: number,
+  maxX: number,
+  maxZ: number,
+  margin: number,
+): Tree[] {
+  const { trunk, canopy, frequency } = params.trees;
+  const trees: Tree[] = [];
+
+  for (let x = minX - margin; x < maxX + margin; x++) {
+    for (let z = minZ - margin; z < maxZ + margin; z++) {
+      if (hashRandom(params.seed, x, z, SALT.tree) >= frequency) continue;
+
+      const { biome, height } = columnAt(simplex, params, x, z);
+      if (height <= params.terrain.waterLevel) continue; // sand, no trees
+
+      trees.push({
+        x,
+        z,
+        groundY: height,
+        biome,
+        trunkHeight: Math.round(
+          trunk.minHeight +
+            (trunk.maxHeight - trunk.minHeight) *
+              hashRandom(params.seed, x, z, SALT.trunkHeight),
+        ),
+        canopyRadius: Math.round(
+          canopy.minRadius +
+            (canopy.maxRadius - canopy.minRadius) *
+              hashRandom(params.seed, x, z, SALT.canopyRadius),
+        ),
+      });
+    }
+  }
+  return trees;
+}
+
+const hasCanopy = (biome: BiomeName) =>
+  biome === 'Temperate' || biome === 'Jungle';
+
+export const treeTopY = (tree: Tree) => tree.groundY + 1 + tree.trunkHeight;
+
+export function hasLeaf(
+  params: WorldParams,
+  tree: Tree,
   x: number,
   y: number,
   z: number,
 ) {
-  const minHeight = params.trees.trunk.minHeight;
-  const maxHeight = params.trees.trunk.maxHeight;
-  const height = Math.round(minHeight + (maxHeight - minHeight) * rng.random());
+  if (!hasCanopy(tree.biome)) return false;
 
-  // Tree trunk starts here
-  for (let treeY = y; treeY <= y + height; treeY++) {
-    if (biome === 'Temperate' || biome === 'Tundra') {
-      setBlock(data, x, treeY, z, blocks.oakLog);
-    } else if (biome === 'Jungle') {
-      setBlock(data, x, treeY, z, blocks.jungleLog);
-    } else if (biome === 'Desert') {
-      setBlock(data, x, treeY, z, blocks.cactus);
-    }
-  }
-  if (biome === 'Temperate' || biome === 'Jungle') {
-    generateTreeCanopy(biome, x, y + height, z, rng, params, data);
-  }
+  const dx = x - tree.x;
+  const dy = y - treeTopY(tree);
+  const dz = z - tree.z;
+  const r = tree.canopyRadius;
+  if (dx * dx + dy * dy + dz * dz >= r * r) return false;
+
+  return (
+    hashRandom(params.seed, x, z, SALT.leaf + y) < params.trees.canopy.density
+  );
 }
 
-/**
- * Generate the canopy for a tree
- * @param {string} biome
- * @param {number} centreX
- * @param {number} centreY
- * @param {number} centreZ
- * @param {RNG} rng
- */
-function generateTreeCanopy(
-  biome: BiomeName,
-  centreX: number,
-  centreY: number,
-  centreZ: number,
-  rng: RNG,
-  params: WorldParams,
+function generateTrees(
   data: ChunkData,
+  params: WorldParams,
+  simplex: SimplexNoise,
+  offsetX: number,
+  offsetZ: number,
 ) {
-  const minRadius = params.trees.canopy.minRadius;
-  const maxRadius = params.trees.canopy.maxRadius;
-  const density = params.trees.canopy.density;
-  const leaves = biome === 'Temperate' ? blocks.oakLeaves : blocks.jungleLeaves;
-  const radius = Math.round(minRadius + (maxRadius - minRadius) * rng.random());
+  const margin = Math.ceil(params.trees.canopy.maxRadius);
+  const trees = collectTrees(
+    params,
+    simplex,
+    offsetX,
+    offsetZ,
+    offsetX + CHUNK_WIDTH,
+    offsetZ + CHUNK_WIDTH,
+    margin,
+  );
 
-  for (let x = -radius; x <= radius; x++) {
-    for (let y = -radius; y <= radius; y++) {
-      for (let z = -radius; z <= radius; z++) {
-        const n = rng.random();
+  for (const tree of trees) {
+    if (!hasCanopy(tree.biome)) continue;
 
-        if (x * x + y * y + z * z >= radius * radius) continue;
+    const leaves =
+      tree.biome === 'Jungle' ? blocks.jungleLeaves : blocks.oakLeaves;
+    const r = tree.canopyRadius;
+    const top = treeTopY(tree);
 
-        if (n < density) {
-          setBlock(data, centreX + x, centreY + y, centreZ + z, leaves);
+    for (let x = tree.x - r; x <= tree.x + r; x++) {
+      for (let y = top - r; y <= top + r; y++) {
+        for (let z = tree.z - r; z <= tree.z + r; z++) {
+          const lx = x - offsetX;
+          const lz = z - offsetZ;
+          if (!inLocalBounds(lx, y, lz)) continue;
+
+          if (
+            data.getId(lx, y, lz) === EMPTY_ID &&
+            hasLeaf(params, tree, x, y, z)
+          ) {
+            data.set(lx, y, lz, leaves.id);
+          }
         }
       }
     }
+  }
+
+  for (const tree of trees) {
+    const lx = tree.x - offsetX;
+    const lz = tree.z - offsetZ;
+    const log = trunkBlock(tree.biome);
+
+    for (let y = tree.groundY + 1; y <= treeTopY(tree); y++) {
+      if (!inLocalBounds(lx, y, lz)) continue;
+
+      const current = data.getId(lx, y, lz);
+      if (
+        current === EMPTY_ID ||
+        current === blocks.oakLeaves.id ||
+        current === blocks.jungleLeaves.id
+      ) {
+        data.set(lx, y, lz, log);
+      }
+    }
+  }
+}
+
+function trunkBlock(biome: BiomeName): number {
+  switch (biome) {
+    case 'Jungle':
+      return blocks.jungleLog.id;
+    case 'Desert':
+      return blocks.cactus.id;
+    default:
+      return blocks.oakLog.id;
   }
 }

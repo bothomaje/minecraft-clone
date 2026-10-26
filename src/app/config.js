@@ -137,10 +137,11 @@ export const CONFIG = {
     params: {
       seed: 0,
       terrain: {
-        scale: 80,
-        magnitude: 10,
-        offset: 5,
-        waterLevel: 3.4,
+        waterLevel: 12.4,
+        baseHeight: 16,
+        continent: { scale: 500, amplitude: 14 },
+        hills: { scale: 60, amplitude: 7, octaves: 3, persistence: 0.5 },
+        mountains: { scale: 220, amplitude: 48, threshold: 0.15, power: 1.6 },
       },
       biomes: {
         scale: 200,
@@ -167,6 +168,7 @@ export const CONFIG = {
       clouds: {
         scale: 30,
         density: 0.5,
+        height: 64,
       },
     },
     water: {

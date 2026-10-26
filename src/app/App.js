@@ -16,6 +16,7 @@ import { PersistenceSystem } from '../systems/PersistenceSystem';
 import { createDebugGui } from '../ui/DebugGui';
 import { SoundManager } from '../loaders/SoundManager';
 import { InventoryUi } from '../ui/InventoryUi';
+import { surfaceHeightAt } from '../engine/world/worldGenerator';
 
 export class App {
   stats = new Stats();
@@ -38,6 +39,16 @@ export class App {
     this.controls.update();
 
     this.world = new World();
+
+    CONFIG.player.position.y =
+      surfaceHeightAt(
+        this.world.params,
+        CONFIG.player.position.x,
+        CONFIG.player.position.z,
+      ) + 3;
+    this.controls.target.copy(CONFIG.player.position);
+    this.controls.update();
+
     this.world.generate();
     scene.add(this.world);
 

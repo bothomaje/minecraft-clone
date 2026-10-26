@@ -323,9 +323,7 @@ export class Chunk extends THREE.Group {
     mesh.count--;
 
     // Notify the instanced mesh we updated the instance matrix
-    // Also re-compute the bounding sphere so raycasting works
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
 
     // Remove the instance associated with the block
     this.setBlockInstanceId(x, y, z, NO_INSTANCE);
