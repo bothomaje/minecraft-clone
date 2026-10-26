@@ -45,4 +45,5 @@ export const textures = {
     top: loadTexture('textures/block/cactus_top.png'),
     side: loadTexture('textures/block/cactus_side.png'),
   },
+  bedrock: loadTexture('textures/block/bedrock.png'),
 };
