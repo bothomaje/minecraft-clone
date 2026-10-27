@@ -148,8 +148,8 @@ export class InteractionSystem {
       1,
     );
 
-    const stage = Math.floor(progress * CONFIG.mining.stages);
-    this.player.showCrack(pos, stage);
+    // const stage = Math.floor(progress * CONFIG.mining.stages);
+    // this.player.showCrack(pos, stage);
 
     if (progress >= 1) {
       this.finishMining();

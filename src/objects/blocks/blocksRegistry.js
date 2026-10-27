@@ -1,7 +1,7 @@
 import { items } from '../items/ItemRegistry';
 import { assertValidSchema } from '../../engine/blocks/blockState';
 import { blockParams } from '../../engine/blocks/BlockParams';
-import { blockMaterials } from '../../render/blockMaterials';
+import { blockMaterials } from '../../render/BlockMaterials';
 
 export const blocks = Object.fromEntries(
   Object.entries(blockParams).map(([key, params]) => [

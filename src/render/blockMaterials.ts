@@ -1,87 +1,82 @@
-import { textures } from '../loaders/TextureManager';
+import { textures, Texture } from '../loaders/TextureManager';
 import * as THREE from 'three';
+
+function lambert(
+  map: Texture,
+  color: THREE.ColorRepresentation = 0xffffff,
+  transparent: boolean = false,
+) {
+  const materials: THREE.MeshLambertMaterial[] = [];
+  const multiFaced = Object.hasOwn(map, 'top') || Object.hasOwn(map, 'bottom');
+
+  if (multiFaced) {
+    materials.push(
+      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
+      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
+      new THREE.MeshLambertMaterial({ map: map.top, transparent, color }),
+      new THREE.MeshLambertMaterial({
+        map: map.bottom ?? map.top,
+        transparent,
+        color,
+      }),
+      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
+      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
+    );
+
+    return materials;
+  }
+
+  return new THREE.MeshLambertMaterial({
+    map: map.side,
+    transparent,
+    color,
+  });
+}
 
 export const blockMaterials = {
   stone: {
-    material: new THREE.MeshLambertMaterial({ map: textures.stone }),
+    material: lambert(textures.stone),
   },
   grassBlock: {
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // right
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // left
-      new THREE.MeshLambertMaterial({
-        map: textures.grassBlock.top,
-        color: 0x79c05a,
-      }), // top
-      new THREE.MeshLambertMaterial({ map: textures.dirt }), // bottom
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // front
-      new THREE.MeshLambertMaterial({ map: textures.grassBlock.side }), // back
-    ],
+    material: lambert(textures.grassBlock),
   },
   dirt: {
-    material: new THREE.MeshLambertMaterial({ map: textures.dirt }),
+    material: lambert(textures.dirt),
   },
   cobblestone: {
-    material: new THREE.MeshLambertMaterial({ map: textures.cobblestone }),
+    material: lambert(textures.cobblestone),
   },
   bedrock: {
-    material: new THREE.MeshLambertMaterial({ map: textures.bedrock }),
+    material: lambert(textures.bedrock),
   },
   cloud: {
     material: new THREE.MeshBasicMaterial({ color: 0xf0f0f0 }),
   },
   sand: {
-    material: new THREE.MeshLambertMaterial({ map: textures.sand }),
+    material: lambert(textures.sand),
   },
   ironOre: {
-    material: new THREE.MeshLambertMaterial({ map: textures.ore.iron }),
+    material: lambert(textures.ironOre),
   },
   coalOre: {
-    material: new THREE.MeshLambertMaterial({ map: textures.ore.coal }),
+    material: lambert(textures.coalOre),
   },
   oakLog: {
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.oak.side }),
-    ],
+    material: lambert(textures.oakLog),
   },
   oakLeaves: {
-    material: new THREE.MeshLambertMaterial({
-      map: textures.leaves.oak,
-      color: 0x79c05a,
-    }),
+    material: lambert(textures.oakLeaves, 0x79c05a, true),
   },
   snow: {
-    material: new THREE.MeshLambertMaterial({ map: textures.snow }),
+    material: lambert(textures.snow),
   },
   cactus: {
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.top }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.top }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-      new THREE.MeshLambertMaterial({ map: textures.cactus.side }),
-    ],
+    material: lambert(textures.cactus),
   },
   jungleLog: {
-    material: [
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.top }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-      new THREE.MeshLambertMaterial({ map: textures.log.jungle.side }),
-    ],
+    material: lambert(textures.jungleLog),
   },
   jungleLeaves: {
-    material: new THREE.MeshLambertMaterial({
-      map: textures.leaves.jungle,
-      color: 0x79c05a,
-    }),
+    material: lambert(textures.jungleLeaves, 0x79c05a, true),
   },
 };
