@@ -67,41 +67,7 @@ export const overworldBiomes = {
   },
 } satisfies Record<string, Biome>;
 
-// export type BiomeName = keyof typeof overworldBiomes;
-
-// export const maxTreeDensity = Math.max(
-//   ...Object.values(overworldBiomes).map((biome) => biome.tree?.density ?? 0),
-// );
-
-// const index = new BoxIndex(
-//   Object.entries(overworldBiomes).map(([name, biome]) => ({
-//     value: name as BiomeName,
-//     boxes: biome.where,
-//   })),
-// );
-
 export interface Climate {
   temperature: number;
   humidity: number;
 }
-
-// /**
-//  * Biome for a climate at a given surface height. Terrain shape does not depend on
-//  * climate: height only places the biome on the elevation axis.
-//  * @param params
-//  * @param climate
-//  * @param height
-//  * @returns
-//  */
-// export function pickBiome(
-//   params: WorldParams,
-//   climate: Climate,
-//   height: number,
-// ): BiomeName {
-//   point[0] = climate.temperature;
-//   point[1] = climate.humidity;
-//   point[2] = height - params.terrain.waterLevel;
-//   return index.find(point);
-// }
-
-// const point: [number, number, number] = [0, 0, 0];

@@ -1,4 +1,4 @@
-import { StateSchema } from './blockState';
+import { StateSchema } from './BlockState';
 
 export const BlockCategory = {
   SOLID: 'solid',
@@ -220,6 +220,52 @@ export const blockParams = {
     hardness: 0.2,
     sounds: sounds.grass,
     drops: [{ item: 'jungleLeaves', count: 1, chance: 0.05 }],
+  },
+  amethystBlock: {
+    id: 582,
+    name: 'amethyst_block',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: false,
+    hardness: 1.5,
+    drops: [],
+  },
+  andesite: {
+    id: 594,
+    name: 'andesite',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: false,
+    hardness: 1.5,
+    drops: [],
+  },
+  deepslate: {
+    id: 633,
+    name: 'deepslate',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    stateSchema: { axis: ['y', 'x', 'z'] },
+    drops: [],
+  },
+  deepslateCoalOre: {
+    id: 661,
+    name: 'deepslate_coal_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [{ item: 'coal', count: 1 }],
+  },
+  deepslateIronOre: {
+    id: 656,
+    name: 'deepslate_iron_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [{ item: 'ironOre', count: 1 }],
   },
 } satisfies Record<string, Block>;
 

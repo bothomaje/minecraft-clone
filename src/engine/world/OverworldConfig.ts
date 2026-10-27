@@ -26,8 +26,36 @@ export const overworldConfig: DimensionConfig = {
     frequency: 0.02,
   },
   ores: {
-    coal: { block: 'coalOre', scale: { x: 20, y: 20, z: 20 }, scarcity: 0.8 },
-    iron: { block: 'ironOre', scale: { x: 60, y: 60, z: 60 }, scarcity: 0.9 },
+    coal: {
+      types: ['stone'],
+      block: 'coalOre',
+      scale: { x: 20, y: 20, z: 20 },
+      scarcity: 0.8,
+    },
+    deepslateCoal: {
+      types: ['deepslate'],
+      block: 'deepslateCoalOre',
+      scale: { x: 20, y: 20, z: 20 },
+      scarcity: 0.8,
+    },
+    iron: {
+      types: ['stone'],
+      block: 'ironOre',
+      scale: { x: 60, y: 60, z: 60 },
+      scarcity: 0.9,
+    },
+    deepslateIron: {
+      types: ['deepslate'],
+      block: 'deepslateIronOre',
+      scale: { x: 60, y: 60, z: 60 },
+      scarcity: 0.9,
+    },
+    andesite: {
+      types: ['stone', 'deepslate'],
+      block: 'andesite',
+      scale: { x: 10, y: 10, z: 10 },
+      scarcity: 0.4,
+    },
   },
   clouds: { enabled: true, scale: 30, density: 0.5, height: 114 },
 };

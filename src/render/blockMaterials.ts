@@ -79,4 +79,9 @@ export const blockMaterials = {
   jungleLeaves: {
     material: lambert(textures.jungleLeaves, 0x79c05a, true),
   },
+  deepslate: { material: lambert(textures.deepslate) },
+  deepslateCoalOre: { material: lambert(textures.deepslateCoalOre) },
+  deepslateIronOre: { material: lambert(textures.deepslateIronOre) },
+  amethystBlock: { material: lambert(textures.amethystBlock) },
+  andesite: { material: lambert(textures.andesite) },
 };

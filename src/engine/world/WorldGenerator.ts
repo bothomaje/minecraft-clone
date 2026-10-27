@@ -14,6 +14,7 @@ const SALT = {
   trunkHeight: 2,
   canopyRadius: 3,
   soil: 4,
+  deepslate: 11,
   bedrock: 5,
   leaf: 100,
 };
@@ -217,11 +218,14 @@ function generateTerrain(
         wx,
         wz,
       );
+      const deepslateTop = deepslateTopY(context.config.seed, 0, wx, wz);
 
       for (let y = context.config.minY; y <= height; y++) {
         let block: Block;
         if (y <= bedrockTop) {
           block = blockParams.bedrock;
+        } else if (y <= deepslateTop) {
+          block = deepslateOrOre(context, wx, y, wz);
         } else if (y === height) {
           block = soil.top;
         } else if (y > height - soilDepth) {
@@ -246,24 +250,53 @@ function soilLayers(biome: string, height: number, context: Context) {
   };
 }
 
-function bedrockTopY(seed: number, minY: number, x: number, z: number): number {
-  let top = minY;
-  if (hashRandom(seed, x, z, SALT.bedrock) < 0.6) {
-    top++;
-    if (hashRandom(seed, x, z, SALT.bedrock + 1) < 0.5) top++;
+function deepslateTopY(
+  seed: number,
+  minY: number,
+  x: number,
+  z: number,
+): number {
+  return minY + Math.round((1 - hashRandom(seed, x, z, SALT.deepslate)) * 10);
+}
+
+function deepslateOrOre(
+  context: Context,
+  x: number,
+  y: number,
+  z: number,
+): Block {
+  let block: Block = blockParams.deepslate;
+  for (const ore of Object.values(context.config.ores)) {
+    if (ore.types.includes('deepslate')) {
+      const value = context.noise.noise3d(
+        x / ore.scale.x,
+        y / ore.scale.y,
+        z / ore.scale.z,
+      );
+      if (value > ore.scarcity) block = blockParams[ore.block];
+    }
   }
-  return top;
+  return block;
+}
+
+function bedrockTopY(seed: number, minY: number, x: number, z: number): number {
+  return (
+    minY +
+    Math.max(Math.round((1 - hashRandom(seed, x, z, SALT.bedrock)) * 10), 5)
+  );
 }
 
 function stoneOrOre(context: Context, x: number, y: number, z: number): Block {
   let block: Block = blockParams.stone;
   for (const ore of Object.values(context.config.ores)) {
-    const value = context.noise.noise3d(
-      x / ore.scale.x,
-      y / ore.scale.y,
-      z / ore.scale.z,
-    );
-    if (value > ore.scarcity) block = blockParams[ore.block];
+    if (ore.types.includes('stone')) {
+      const value = context.noise.noise3d(
+        x / ore.scale.x,
+        y / ore.scale.y,
+        z / ore.scale.z,
+      );
+      if (value > ore.scarcity) block = blockParams[ore.block];
+    }
   }
   return block;
 }

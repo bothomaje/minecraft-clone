@@ -61,4 +61,16 @@ export const textures = {
     side: loadTexture('textures/block/deepslate.png'),
     top: loadTexture('textures/block/deepslate_top.png'),
   },
+  deepslateCoalOre: {
+    side: loadTexture('textures/block/deepslate_coal_ore.png'),
+  },
+  deepslateIronOre: {
+    side: loadTexture('textures/block/deepslate_iron_ore.png'),
+  },
+  amethystBlock: {
+    side: loadTexture('textures/block/amethyst_block.png'),
+  },
+  andesite: {
+    side: loadTexture('textures/block/andesite.png'),
+  },
 } satisfies Record<string, Texture>;

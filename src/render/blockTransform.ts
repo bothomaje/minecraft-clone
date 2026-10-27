@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { unpackState } from '../engine/blocks/blockState';
+import { unpackState } from '../engine/blocks/BlockState';
 import { Block } from '../engine/blocks/BlockParams';
 
 const _position = new THREE.Vector3();

@@ -4,7 +4,9 @@ import { MAX_Y, MIN_Y } from './Constants';
 
 export type DimensionId = 'overworld';
 
+type OreTypes = 'stone' | 'deepslate';
 export interface OreParams {
+  types: OreTypes[];
   block: BlockKey;
   scale: { x: number; y: number; z: number };
   scarcity: number;

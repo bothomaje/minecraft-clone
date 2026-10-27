@@ -14,7 +14,7 @@ import {
   indexToLocal,
   chunkPos,
 } from '../../engine/world/Coords';
-import { setBlockMatrix } from '../../render/blockTransform';
+import { setBlockMatrix } from '../../render/BlockTransform';
 import { generateChunkData } from '../../engine/world/WorldGenerator';
 import { waterSurfaceY } from '../../engine/world/DimensionConfig';
 

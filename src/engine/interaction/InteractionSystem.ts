@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CONFIG } from '../../app/Config';
-import { packState } from '../blocks/blockState';
+import { packState } from '../blocks/BlockState';
 import {
   blocksById,
   placeableBlockByItem,
