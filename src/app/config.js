@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { CHUNK_WIDTH, MAX_Y, MIN_Y } from '../engine/world/constants';
+import { CHUNK_WIDTH, MAX_Y, MIN_Y } from '../engine/world/Constants';
+import { createOverworldConfig } from '../engine/world/OverworldConfig';
 
 export const CONFIG = {
   renderer: {
@@ -134,51 +135,7 @@ export const CONFIG = {
       minY: MIN_Y,
       maxY: MAX_Y,
     },
-    params: {
-      seed: 0,
-      terrain: {
-        waterLevel: 12.4,
-        soilDepth: 3,
-        baseHeight: 16,
-        continent: { scale: 500, amplitude: 14 },
-        hills: { scale: 60, amplitude: 7, octaves: 3, persistence: 0.5 },
-        mountains: { scale: 220, amplitude: 48, threshold: 0.15, power: 1.6 },
-      },
-      biomes: {
-        temperature: { scale: 450 },
-        humidity: { scale: 350 },
-        snowLine: 55,
-      },
-      trees: {
-        trunk: {
-          minHeight: 5,
-          maxHeight: 7,
-        },
-        canopy: {
-          minRadius: 2,
-          maxRadius: 3,
-          density: 0.5,
-        },
-        frequency: 0.02,
-      },
-      clouds: {
-        scale: 30,
-        density: 0.5,
-        height: 64,
-      },
-      ores: {
-        coal: {
-          block: 'coalOre',
-          scale: { x: 20, y: 20, z: 20 },
-          scarcity: 0.8,
-        },
-        iron: {
-          block: 'ironOre',
-          scale: { x: 60, y: 60, z: 60 },
-          scarcity: 0.9,
-        },
-      },
-    },
+    params: createOverworldConfig(),
     water: {
       material: {
         color: 0x9090e0,

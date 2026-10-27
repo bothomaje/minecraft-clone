@@ -8,7 +8,7 @@ import {
   worldToBlock,
   worldToChunkAxis,
   worldToLocalAxis,
-} from '../../engine/world/coords';
+} from '../../engine/world/Coords';
 
 export class World extends THREE.Group {
   asyncLoading = CONFIG.world.asyncLoading;

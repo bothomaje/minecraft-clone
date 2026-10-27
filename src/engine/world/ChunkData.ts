@@ -1,5 +1,5 @@
-import { CHUNK_VOLUME } from './constants';
-import { blockIndex } from './coords';
+import { CHUNK_VOLUME } from './Constants';
+import { blockIndex } from './Coords';
 
 export const EMPTY_ID = 0;
 export const UNLOADED = -1;

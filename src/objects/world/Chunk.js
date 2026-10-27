@@ -7,15 +7,16 @@ import {
   UNLOADED,
   unpackEdit,
 } from '../../engine/world/ChunkData';
-import { CHUNK_VOLUME } from '../../engine/world/constants';
+import { CHUNK_VOLUME } from '../../engine/world/Constants';
 import {
   inLocalBounds,
   blockIndex,
   indexToLocal,
   chunkPos,
-} from '../../engine/world/coords';
+} from '../../engine/world/Coords';
 import { setBlockMatrix } from '../../render/blockTransform';
 import { generateChunkData } from '../../engine/world/WorldGenerator';
+import { waterSurfaceY } from '../../engine/world/DimensionConfig';
 
 const geometry = new THREE.BoxGeometry();
 const NO_INSTANCE = -1;
@@ -94,7 +95,7 @@ export class Chunk extends THREE.Group {
     mesh.rotateX(-Math.PI / 2.0);
     mesh.position.set(
       this.size.width / 2,
-      this.world.params.terrain.waterLevel,
+      waterSurfaceY(this.world.params),
       this.size.width / 2,
     );
     mesh.scale.set(this.size.width, this.size.width, 1);
