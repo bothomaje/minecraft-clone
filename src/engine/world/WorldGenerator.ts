@@ -1,18 +1,17 @@
-import { SimplexNoise } from 'three/examples/jsm/Addons.js';
+import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 import { RNG } from '../../utils/Rng';
 import { WorldParams } from './WorldParams';
 import { ChunkData, EMPTY_ID } from './ChunkData';
 import { CHUNK_WIDTH, MAX_Y, MIN_Y } from './constants';
-import { Block } from '../blocks/blockParams';
-import { inLocalBounds } from './coords';
-import { blocks, resources } from '../../objects/blocks/blocksRegistry';
+import { Block, blockParams } from '../blocks/BlockParams';
+import { ChunkPos, inLocalBounds } from './coords';
 import {
   BiomeName,
   biomes,
   Climate,
   maxTreeDensity,
   pickBiome,
-} from './biomes';
+} from './Biomes';
 import { hashRandom } from './hash';
 
 const SALT = {
@@ -24,19 +23,27 @@ const SALT = {
   leaf: 100,
 };
 
+let cachedNoise: { seed: number; noise: SimplexNoise } | undefined;
+
+function getNoise(seed: number): SimplexNoise {
+  if (cachedNoise?.seed !== seed) {
+    cachedNoise = { seed, noise: new SimplexNoise(new RNG(seed)) };
+  }
+  return cachedNoise.noise;
+}
+
 export function generateChunkData(
   params: WorldParams,
-  x: number,
-  z: number,
+  chunk: ChunkPos,
 ): ChunkData {
+  const originX = chunk.x * CHUNK_WIDTH;
+  const originZ = chunk.z * CHUNK_WIDTH;
   const data = new ChunkData();
-  const rng = new RNG(params.seed);
-  const noise = new SimplexNoise(rng);
+  const noise = getNoise(params.seed);
 
-  generateTerrain(params, data, noise, x, z);
-  generateTrees(data, params, noise, x, z);
-  generateClouds(noise, params, data, x, z);
-
+  generateTerrain(data, params, noise, originX, originZ);
+  generateTrees(data, params, noise, originX, originZ);
+  generateClouds(data, params, noise, originX, originZ);
   return data;
 }
 
@@ -149,7 +156,6 @@ function surfaceHeight(
     continentNoise * continent.amplitude +
     hillNoise * hills.amplitude;
 
-  // Mountains only rise on land: they fade in over the first few blocks above sea level
   const mountainNoise = simplex.noise(
     x / mountains.scale + LAYER_OFFSET.mountains,
     z / mountains.scale + LAYER_OFFSET.mountains,
@@ -169,11 +175,11 @@ export function surfaceHeightAt(
   x: number,
   z: number,
 ): number {
-  return surfaceHeight(new SimplexNoise(new RNG(params.seed)), params, x, z);
+  return surfaceHeight(getNoise(params.seed), params, x, z);
 }
 
 export function biomeAt(params: WorldParams, x: number, z: number): BiomeName {
-  return columnAt(new SimplexNoise(new RNG(params.seed)), params, x, z).biome;
+  return columnAt(getNoise(params.seed), params, x, z).biome;
 }
 
 /**
@@ -181,16 +187,16 @@ export function biomeAt(params: WorldParams, x: number, z: number): BiomeName {
  * @param {RNG} rng
  */
 function generateTerrain(
-  params: WorldParams,
   data: ChunkData,
+  params: WorldParams,
   simplex: SimplexNoise,
-  chunkX: number,
-  chunkZ: number,
+  originX: number,
+  originZ: number,
 ) {
   for (let x = 0; x < CHUNK_WIDTH; x++) {
     for (let z = 0; z < CHUNK_WIDTH; z++) {
-      const wx = chunkX + x;
-      const wz = chunkZ + z;
+      const wx = originX + x;
+      const wz = originZ + z;
       const { biome, height } = columnAt(simplex, params, wx, wz);
 
       const soil = soilLayers(biome, height, params);
@@ -202,13 +208,13 @@ function generateTerrain(
       for (let y = MIN_Y; y <= height; y++) {
         let block: Block;
         if (y <= bedrockTop) {
-          block = blocks.bedrock;
+          block = blockParams.bedrock;
         } else if (y === height) {
           block = soil.top;
         } else if (y > height - soilDepth) {
           block = soil.filler;
         } else {
-          block = stoneOrOre(simplex, wx, y, wz);
+          block = stoneOrOre(simplex, params, wx, y, wz);
         }
 
         setBlock(data, x, y, z, block);
@@ -221,8 +227,8 @@ function soilLayers(biome: BiomeName, height: number, params: WorldParams) {
   const definition = biomes[biome];
   const capped = biome === 'mountains' && height >= params.biomes.snowLine;
   return {
-    top: capped ? blocks.snow : blocks[definition.top],
-    filler: blocks[definition.filler],
+    top: capped ? blockParams.snow : blockParams[definition.top],
+    filler: blockParams[definition.filler],
   };
 }
 
@@ -237,43 +243,21 @@ function bedrockTopY(seed: number, x: number, z: number): number {
 
 function stoneOrOre(
   simplex: SimplexNoise,
+  params: WorldParams,
   x: number,
   y: number,
   z: number,
 ): Block {
-  let block = blocks.stone;
-
-  for (const resource of resources) {
-    if (!isOreResource(resource)) continue;
-
+  let block: Block = blockParams.stone;
+  for (const ore of Object.values(params.ores)) {
     const value = simplex.noise3d(
-      x / resource.scale.x,
-      y / resource.scale.y,
-      z / resource.scale.z,
+      x / ore.scale.x,
+      y / ore.scale.y,
+      z / ore.scale.z,
     );
-    if (value > resource.scarcity) block = resource;
+    if (value > ore.scarcity) block = blockParams[ore.block];
   }
   return block;
-}
-
-type OreResource = Block & {
-  scale: { x: number; y: number; z: number };
-  scarcity: number;
-};
-
-function isOreResource(resource: Block): resource is OreResource {
-  const candidate = resource as Block & {
-    scale?: { x?: unknown; y?: unknown; z?: unknown };
-    scarcity?: unknown;
-  };
-
-  return (
-    candidate.scale !== undefined &&
-    typeof candidate.scale.x === 'number' &&
-    typeof candidate.scale.y === 'number' &&
-    typeof candidate.scale.z === 'number' &&
-    typeof candidate.scarcity === 'number'
-  );
 }
 
 /**
@@ -281,18 +265,18 @@ function isOreResource(resource: Block): resource is OreResource {
  * @param {RNG} rng
  */
 function generateClouds(
-  simplex: SimplexNoise,
-  params: WorldParams,
   data: ChunkData,
-  chunkX: number,
-  chunkZ: number,
+  params: WorldParams,
+  simplex: SimplexNoise,
+  originX: number,
+  originZ: number,
 ) {
   for (let x = 0; x < CHUNK_WIDTH; x++) {
     for (let z = 0; z < CHUNK_WIDTH; z++) {
       const value =
         (simplex.noise(
-          (chunkX + x) / params.clouds.scale,
-          (chunkZ + z) / params.clouds.scale,
+          (originX + x) / params.clouds.scale,
+          (originZ + z) / params.clouds.scale,
         ) +
           1) *
         0.5;
@@ -302,13 +286,13 @@ function generateClouds(
         value < params.clouds.density &&
         data.getId(x, height, z) === EMPTY_ID
       ) {
-        setBlock(data, x, height, z, blocks.cloud);
+        setBlock(data, x, height, z, blockParams.cloud);
       }
     }
   }
 }
 
-export interface Tree {
+export interface PlacedTree {
   x: number;
   z: number;
   groundY: number;
@@ -325,9 +309,9 @@ export function collectTrees(
   maxX: number,
   maxZ: number,
   margin: number,
-): Tree[] {
+): PlacedTree[] {
   const { trunk, canopy, frequency } = params.trees;
-  const trees: Tree[] = [];
+  const trees: PlacedTree[] = [];
 
   for (let x = minX - margin; x < maxX + margin; x++) {
     for (let z = minZ - margin; z < maxZ + margin; z++) {
@@ -361,11 +345,12 @@ export function collectTrees(
 
 const hasCanopy = (biome: BiomeName) => biomes[biome].tree?.leaves != null;
 
-export const treeTopY = (tree: Tree) => tree.groundY + 1 + tree.trunkHeight;
+export const treeTopY = (tree: PlacedTree) =>
+  tree.groundY + 1 + tree.trunkHeight;
 
 export function hasLeaf(
   params: WorldParams,
-  tree: Tree,
+  tree: PlacedTree,
   x: number,
   y: number,
   z: number,
@@ -419,7 +404,7 @@ function generateTrees(
             data.getId(lx, y, lz) === EMPTY_ID &&
             hasLeaf(params, tree, x, y, z)
           ) {
-            data.set(lx, y, lz, blocks[leaves].id);
+            data.set(lx, y, lz, blockParams[leaves].id);
           }
         }
       }
@@ -436,7 +421,7 @@ function generateTrees(
 
       const current = data.getId(lx, y, lz);
       if (current === EMPTY_ID || isLeaves(current)) {
-        data.set(lx, y, lz, blocks[log].id);
+        data.set(lx, y, lz, blockParams[log].id);
       }
     }
   }
@@ -444,7 +429,7 @@ function generateTrees(
 
 const LEAF_IDS = new Set(
   Object.values(biomes).flatMap((biome) =>
-    biome.tree?.leaves ? [blocks[biome.tree.leaves].id] : [],
+    biome.tree?.leaves ? [blockParams[biome.tree.leaves].id] : [],
   ),
 );
 const isLeaves = (id: number) => LEAF_IDS.has(id);

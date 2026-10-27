@@ -1,6 +1,6 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { resources } from '../objects/blocks/blocksRegistry';
-import { CONFIG } from '../app/config';
+import { resources } from '../objects/blocks/BlocksRegistry';
+import { CONFIG } from '../app/Config';
 
 export function createDebugGui(scene, world, player) {
   const gui = new GUI();

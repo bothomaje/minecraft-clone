@@ -1,5 +1,5 @@
 import { WorldParams } from './WorldParams';
-import { BlockKey } from '../blocks/blockParams';
+import { BlockKey } from '../blocks/BlockParams';
 import { Box, BoxIndex } from './biomeIndex';
 
 export interface Tree {

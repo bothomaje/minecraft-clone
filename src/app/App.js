@@ -2,7 +2,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { SceneManager } from '../scene/SceneManager';
 import { createOrbitCamera } from '../scene/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import { CONFIG } from './config';
+import { CONFIG } from './Config';
 import { World } from '../objects/world/World';
 import { Player } from '../objects/entities/Player';
 import { ModelLoader } from '../loaders/ModelLoader';
@@ -13,10 +13,10 @@ import { ResizeSystem } from '../systems/ResizeSystem';
 import { InputSystem } from '../systems/InputSystem';
 import { InteractionSystem } from '../engine/interaction/InteractionSystem';
 import { PersistenceSystem } from '../systems/PersistenceSystem';
-import { createDebugGui } from '../ui/DebugGui';
+// import { createDebugGui } from '../ui/DebugGui';
 import { SoundManager } from '../loaders/SoundManager';
 import { InventoryUi } from '../ui/InventoryUi';
-import { surfaceHeightAt } from '../engine/world/worldGenerator';
+import { surfaceHeightAt } from '../engine/world/WorldGenerator';
 
 export class App {
   stats = new Stats();
@@ -108,7 +108,7 @@ export class App {
   };
 
   start() {
-    createDebugGui(this.scene, this.world, this.player);
+    // createDebugGui(this.scene, this.world, this.player);
     this.animate();
   }
 }

@@ -1,17 +1,17 @@
 import * as THREE from 'three';
-import { CONFIG } from '../../app/config';
+import { CONFIG } from '../../app/Config';
 import { packState } from '../blocks/blockState';
 import {
   blocksById,
   placeableBlockByItem,
-} from '../../objects/blocks/blocksRegistry';
+} from '../../objects/blocks/BlocksRegistry';
 import { rollBlockDrops } from '../../objects/items/ItemRegistry';
 import { Raycaster } from './Raycaster';
 import { Player } from '../../objects/entities/Player';
 import { World } from '../../objects/world/World';
 import { SoundManager } from '../../loaders/SoundManager';
 import { BlockHit } from './BlockHit';
-import { Block } from '../blocks/blockParams';
+import { Block } from '../blocks/BlockParams';
 
 const MOUSE_BUTTON = {
   LEFT: 0,

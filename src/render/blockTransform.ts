@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { unpackState } from '../engine/blocks/blockState';
-import { Block } from '../engine/blocks/blockParams';
+import { Block } from '../engine/blocks/BlockParams';
 
 const _position = new THREE.Vector3();
 const _scale = new THREE.Vector3(1, 1, 1);

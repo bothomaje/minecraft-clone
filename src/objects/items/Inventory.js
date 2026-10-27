@@ -1,4 +1,4 @@
-import { CONFIG } from '../../app/config';
+import { CONFIG } from '../../app/Config';
 import { state } from '../../app/state';
 import { itemsById } from './ItemRegistry';
 import { ItemStack } from './ItemStack';

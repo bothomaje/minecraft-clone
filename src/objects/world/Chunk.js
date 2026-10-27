@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { blocks, blocksById } from '../blocks/blocksRegistry';
-import { CONFIG } from '../../app/config';
+import { blocks, blocksById } from '../blocks/BlocksRegistry';
+import { CONFIG } from '../../app/Config';
 import {
   ChunkData,
   packEdit,
@@ -12,9 +12,10 @@ import {
   inLocalBounds,
   blockIndex,
   indexToLocal,
+  chunkPos,
 } from '../../engine/world/coords';
 import { setBlockMatrix } from '../../render/blockTransform';
-import { generateChunkData } from '../../engine/world/worldGenerator';
+import { generateChunkData } from '../../engine/world/WorldGenerator';
 
 const geometry = new THREE.BoxGeometry();
 const NO_INSTANCE = -1;
@@ -52,8 +53,7 @@ export class Chunk extends THREE.Group {
     this.initializeTerrain();
     this.chunkData = generateChunkData(
       this.world.params,
-      this.position.x,
-      this.position.z,
+      chunkPos(this.chunkX, this.chunkZ),
     );
     this.loadPlayerChanges();
     this.generateMeshes();

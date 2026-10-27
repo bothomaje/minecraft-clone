@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CONFIG } from '../app/config';
+import { CONFIG } from '../app/Config';
 
 export class Lighting {
   sun = new THREE.DirectionalLight();

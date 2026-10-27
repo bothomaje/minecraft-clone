@@ -166,6 +166,18 @@ export const CONFIG = {
         density: 0.5,
         height: 64,
       },
+      ores: {
+        coal: {
+          block: 'coalOre',
+          scale: { x: 20, y: 20, z: 20 },
+          scarcity: 0.8,
+        },
+        iron: {
+          block: 'ironOre',
+          scale: { x: 60, y: 60, z: 60 },
+          scarcity: 0.9,
+        },
+      },
     },
     water: {
       material: {

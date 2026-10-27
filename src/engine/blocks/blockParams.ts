@@ -33,8 +33,6 @@ export interface Block {
   stateSchema?: StateSchema;
   sounds?: SoundSet;
   drops: readonly Drop[];
-  scale?: { x: number; y: number; z: number };
-  scarcity?: number;
 }
 
 const soundSet = (blockName: string) => ({
@@ -72,8 +70,6 @@ export const blockParams = {
     hardness: 1.5,
     gravity: false,
     requiredTool: 'pickaxe',
-    scale: { x: 30, y: 30, z: 30 },
-    scarcity: 0.5,
     sounds: sounds.stone,
     drops: [{ item: 'cobblestone', count: 1 }],
   },
@@ -108,8 +104,6 @@ export const blockParams = {
     hardness: 1.5,
     gravity: false,
     requiredTool: 'pickaxe',
-    scale: { x: 30, y: 30, z: 30 },
-    scarcity: 0.5,
     sounds: sounds.stone,
     drops: [{ item: 'cobblestone', count: 1 }],
   },
@@ -146,8 +140,6 @@ export const blockParams = {
   ironOre: {
     id: 15,
     name: 'iron_ore',
-    scale: { x: 60, y: 60, z: 60 },
-    scarcity: 0.9,
     category: BlockCategory.SOLID,
     solid: true,
     opaque: true,
@@ -159,8 +151,6 @@ export const blockParams = {
   coalOre: {
     id: 16,
     name: 'coal_ore',
-    scale: { x: 20, y: 20, z: 20 },
-    scarcity: 0.8,
     category: BlockCategory.SOLID,
     solid: true,
     opaque: true,

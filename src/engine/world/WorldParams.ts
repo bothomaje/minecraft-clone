@@ -1,3 +1,11 @@
+import { BlockKey } from '../blocks/BlockParams';
+
+export interface OreParams {
+  block: BlockKey;
+  scale: { x: number; y: number; z: number };
+  scarcity: number;
+}
+
 export interface WorldParams {
   seed: number;
   terrain: {
@@ -29,4 +37,5 @@ export interface WorldParams {
     frequency: number;
   };
   clouds: { scale: number; density: number; height: number };
+  ores: Record<string, OreParams>;
 }
