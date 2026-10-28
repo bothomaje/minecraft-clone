@@ -14,13 +14,22 @@ const SALT = {
   trunkHeight: 2,
   canopyRadius: 3,
   soil: 4,
-  deepslate: 1000,
-  ore: 2000,
   bedrock: 5,
   leaf: 100,
+  deepslate: 1000,
+  ore: 2000,
+  caveLayer: 100000,
 };
 
+interface CaveNoise {
+  tunnelA: SimplexNoise;
+  tunnelB: SimplexNoise;
+  cavern: SimplexNoise;
+  entrance: SimplexNoise;
+}
+
 let cachedNoise: { seed: number; noise: SimplexNoise } | undefined;
+let caveCache: { seed: number; noise: CaveNoise } | undefined;
 
 function getNoise(seed: number): SimplexNoise {
   if (cachedNoise?.seed !== seed) {
@@ -29,9 +38,31 @@ function getNoise(seed: number): SimplexNoise {
   return cachedNoise.noise;
 }
 
+function getCaveNoise(seed: number): CaveNoise {
+  if (caveCache?.seed !== seed) {
+    const make = (layer: number) =>
+      new SimplexNoise(
+        new RNG(
+          (hashRandom(seed, layer, 0, SALT.caveLayer) * 4294967296) >>> 0,
+        ),
+      );
+    caveCache = {
+      seed,
+      noise: {
+        tunnelA: make(1),
+        tunnelB: make(2),
+        cavern: make(3),
+        entrance: make(4),
+      },
+    };
+  }
+  return caveCache.noise;
+}
+
 interface Context {
   config: DimensionConfig;
   noise: SimplexNoise;
+  caveNoise: CaveNoise;
   source: BiomeSource;
 }
 
@@ -39,6 +70,7 @@ function getContext(config: DimensionConfig): Context {
   return {
     config,
     noise: getNoise(config.seed),
+    caveNoise: getCaveNoise(config.seed),
     source: biomeSources[config.biomeSource],
   };
 }
@@ -52,7 +84,8 @@ export function generateChunkData(
   const originZ = chunk.z * CHUNK_WIDTH;
   const data = new ChunkData();
 
-  generateTerrain(data, context, originX, originZ);
+  const heights = generateTerrain(data, context, originX, originZ);
+  generateCaves(data, context, heights, originX, originZ);
   generateOres(data, context, originX, originZ);
   generateTrees(data, context, originX, originZ);
   generateClouds(data, context, originX, originZ);
@@ -204,11 +237,14 @@ function generateTerrain(
   originX: number,
   originZ: number,
 ) {
+  const heights = new Int16Array(CHUNK_WIDTH * CHUNK_WIDTH);
+
   for (let x = 0; x < CHUNK_WIDTH; x++) {
     for (let z = 0; z < CHUNK_WIDTH; z++) {
       const wx = originX + x;
       const wz = originZ + z;
       const { biome, height } = columnAt(context, wx, wz);
+      heights[x * CHUNK_WIDTH + z] = height;
 
       const soil = soilLayers(biome, height, context);
       const soilDepth =
@@ -240,6 +276,8 @@ function generateTerrain(
       }
     }
   }
+
+  return heights;
 }
 
 function soilLayers(biome: string, height: number, context: Context) {
@@ -265,56 +303,12 @@ function isDeepslate(
   return hashRandom(context.config.seed, x, z, SALT.deepslate + y) < chance;
 }
 
-// function deepslateTopY(
-//   seed: number,
-//   minY: number,
-//   x: number,
-//   z: number,
-// ): number {
-//   return minY + Math.round((1 - hashRandom(seed, x, z, SALT.deepslate)) * 10);
-// }
-
-// function deepslateOrOre(
-//   context: Context,
-//   x: number,
-//   y: number,
-//   z: number,
-// ): Block {
-//   let block: Block = blockParams.deepslate;
-//   for (const ore of Object.values(context.config.ores)) {
-//     if (ore.types.includes('deepslate')) {
-//       const value = context.noise.noise3d(
-//         x / ore.scale.x,
-//         y / ore.scale.y,
-//         z / ore.scale.z,
-//       );
-//       if (value > ore.scarcity) block = blockParams[ore.block];
-//     }
-//   }
-//   return block;
-// }
-
 function bedrockTopY(seed: number, minY: number, x: number, z: number): number {
   return (
     minY +
     Math.max(Math.round((1 - hashRandom(seed, x, z, SALT.bedrock)) * 10), 5)
   );
 }
-
-// function stoneOrOre(context: Context, x: number, y: number, z: number): Block {
-//   let block: Block = blockParams.stone;
-//   for (const ore of Object.values(context.config.ores)) {
-//     if (ore.types.includes('stone')) {
-//       const value = context.noise.noise3d(
-//         x / ore.scale.x,
-//         y / ore.scale.y,
-//         z / ore.scale.z,
-//       );
-//       if (value > ore.scarcity) block = blockParams[ore.block];
-//     }
-//   }
-//   return block;
-// }
 
 /**
  * Creates happy little clouds
@@ -375,6 +369,12 @@ export function collectTrees(
       const { biome, height } = columnAt(context, x, z);
       const tree = context.source.biomes[biome].tree;
       if (!tree || chance >= frequency * tree.density) continue;
+      if (
+        context.config.caves.enabled &&
+        isEntrance(context, x, z, height) &&
+        isCave(context, x, height, z, height, true)
+      )
+        continue;
 
       trees.push({
         x,
@@ -625,6 +625,107 @@ function generateOres(
             if (stoneReplacement) data.set(lx, y, lz, normalId);
             else if (deepslateReplacement) data.set(lx, y, lz, deepId);
           }
+        }
+      }
+    }
+  }
+}
+
+const CAVERN_EDGE_FADE = 8;
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+/** Pushes a threshold toward 1 (never carves) as strength falls from 1 to 0 */
+const raise = (threshold: number, strength: number) =>
+  threshold + (1 - strength) * (1 - threshold);
+
+function isEntrance(
+  context: Context,
+  x: number,
+  z: number,
+  surface: number,
+): boolean {
+  const { entrances } = context.config.caves;
+  if (surface <= context.config.seaLevel) return false;
+  return (
+    context.caveNoise.entrance.noise(x / entrances.scale, z / entrances.scale) >
+    entrances.threshold
+  );
+}
+
+/** Pure function of world coordinates, so every chunk agrees on every block. */
+function isCave(
+  context: Context,
+  x: number,
+  y: number,
+  z: number,
+  surface: number,
+  entrance: boolean,
+): boolean {
+  const caves = context.config.caves;
+  if (!caves.enabled || y < caves.minY || y > caves.maxY) return false;
+
+  const depth = surface - y;
+  const fade = Math.max(1, caves.surfaceFade);
+  const f = entrance ? 1 : clamp01((depth - caves.surfaceMargin) / fade);
+  if (f <= 0) return false;
+
+  const { tunnels, caverns } = caves;
+  const noise = context.caveNoise;
+
+  // Tunnels: both fields near zero. B is only sampled when A already passed.
+  const t = tunnels.thickness * f;
+  const nx = x / tunnels.scaleXZ;
+  const ny = y / tunnels.scaleY;
+  const nz = z / tunnels.scaleXZ;
+  if (Math.abs(noise.tunnelA.noise3d(nx, ny, nz)) < t) {
+    if (Math.abs(noise.tunnelB.noise3d(nx, ny, nz)) < t) return true;
+  }
+
+  // Caverns: high values of a low-frequency field, inside a Y band
+  if (y >= caverns.minY && y <= caverns.maxY) {
+    const band =
+      Math.min(y - caverns.minY, caverns.maxY - y) / CAVERN_EDGE_FADE;
+    const strength = Math.min(f, clamp01(band));
+    const value = noise.cavern.noise3d(
+      x / caverns.scaleXZ,
+      y / caverns.scaleY,
+      z / caverns.scaleXZ,
+    );
+    if (value > raise(caverns.threshold, strength)) return true;
+  }
+  return false;
+}
+
+function generateCaves(
+  data: ChunkData,
+  context: Context,
+  heights: Int16Array,
+  originX: number,
+  originZ: number,
+) {
+  const caves = context.config.caves;
+  if (!caves.enabled) return;
+
+  const bedrockId = blockParams.bedrock.id;
+  const bottom = Math.max(caves.minY, context.config.minY + 1);
+
+  for (let x = 0; x < CHUNK_WIDTH; x++) {
+    for (let z = 0; z < CHUNK_WIDTH; z++) {
+      const surface = heights[x * CHUNK_WIDTH + z];
+      const wx = originX + x;
+      const wz = originZ + z;
+      const entrance = isEntrance(context, wx, wz, surface);
+
+      // Non-entrance columns can't be carved within the margin, so skip that part
+      const top = Math.min(
+        entrance ? surface : surface - caves.surfaceMargin - 1,
+        caves.maxY,
+      );
+
+      for (let y = top; y >= bottom; y--) {
+        const id = data.getId(x, y, z);
+        if (id === EMPTY_ID || id === bedrockId) continue;
+        if (isCave(context, wx, y, wz, surface, entrance)) {
+          data.set(x, y, z, EMPTY_ID);
         }
       }
     }

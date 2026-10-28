@@ -244,6 +244,16 @@ export const overworldConfig: DimensionConfig = {
       veinsPerChunk: 14,
     },
   },
+  caves: {
+    enabled: true,
+    minY: -56,
+    maxY: 200,
+    surfaceMargin: 3,
+    surfaceFade: 12,
+    tunnels: { scaleXZ: 40, scaleY: 28, thickness: 0.09 },
+    caverns: { scaleXZ: 80, scaleY: 40, threshold: 0.62, minY: -48, maxY: 40 },
+    entrances: { scale: 100, threshold: 0.5 },
+  },
   clouds: { enabled: true, scale: 30, density: 0.5, height: 114 },
 };
 

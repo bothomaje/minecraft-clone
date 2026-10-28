@@ -53,6 +53,22 @@ export interface DimensionConfig {
     transitionBottom: number;
   };
   ores: Record<string, OreParams>;
+  caves: {
+    enabled: boolean;
+    minY: number; // lowest carved Y; keep above the bedrock layer
+    maxY: number;
+    surfaceMargin: number; // solid cover that is never carved
+    surfaceFade: number; // taper distance below the margin
+    tunnels: { scaleXZ: number; scaleY: number; thickness: number };
+    caverns: {
+      scaleXZ: number;
+      scaleY: number;
+      threshold: number;
+      minY: number;
+      maxY: number;
+    };
+    entrances: { scale: number; threshold: number }; // threshold >= 1 disables entrances
+  };
   clouds: { enabled: boolean; scale: number; density: number; height: number };
 }
 
