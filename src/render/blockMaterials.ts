@@ -96,4 +96,8 @@ export const blockMaterials = {
   deepslateRedstoneOre: { material: lambert(textures.deepslateRedstoneOre) },
   diamondOre: { material: lambert(textures.diamondOre) },
   deepslateDiamondOre: { material: lambert(textures.deepslateDiamondOre) },
+  gravel: { material: lambert(textures.gravel) },
+  granite: { material: lambert(textures.granite) },
+  diorite: { material: lambert(textures.diorite) },
+  tuff: { material: lambert(textures.tuff) },
 };

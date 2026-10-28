@@ -109,4 +109,16 @@ export const textures = {
   deepslateDiamondOre: {
     side: loadTexture('textures/block/deepslate_diamond_ore.png'),
   },
+  gravel: {
+    side: loadTexture('textures/block/gravel.png'),
+  },
+  granite: {
+    side: loadTexture('textures/block/granite.png'),
+  },
+  diorite: {
+    side: loadTexture('textures/block/diorite.png'),
+  },
+  tuff: {
+    side: loadTexture('textures/block/tuff.png'),
+  },
 } satisfies Record<string, Texture>;

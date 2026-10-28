@@ -3,13 +3,14 @@ import { BiomeSourceId } from './BiomeSource';
 import { MAX_Y, MIN_Y } from './Constants';
 
 export type DimensionId = 'overworld';
-
-type OreTypes = 'stone' | 'deepslate';
 export interface OreParams {
-  types: OreTypes[];
   block: BlockKey;
-  scale: { x: number; y: number; z: number };
-  scarcity: number;
+  deepslateBlock?: BlockKey; // falls back to `block`
+  minY: number; // inclusive, absolute Y
+  maxY: number; // inclusive
+  distribution: 'uniform' | 'triangle'; // triangle peaks at the middle of the range
+  veinSize: { min: number; max: number }; // 1..16
+  veinsPerChunk: number; // fractional values are a chance of one more
 }
 
 export interface DimensionConfig {
@@ -45,6 +46,11 @@ export interface DimensionConfig {
     trunk: { minHeight: number; maxHeight: number };
     canopy: { minRadius: number; maxRadius: number; density: number };
     frequency: number;
+  };
+  deepslate: {
+    enabled: boolean;
+    transitionTop: number;
+    transitionBottom: number;
   };
   ores: Record<string, OreParams>;
   clouds: { enabled: boolean; scale: number; density: number; height: number };

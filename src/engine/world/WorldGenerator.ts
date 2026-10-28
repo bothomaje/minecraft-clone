@@ -14,7 +14,8 @@ const SALT = {
   trunkHeight: 2,
   canopyRadius: 3,
   soil: 4,
-  deepslate: 11,
+  deepslate: 1000,
+  ore: 2000,
   bedrock: 5,
   leaf: 100,
 };
@@ -52,6 +53,7 @@ export function generateChunkData(
   const data = new ChunkData();
 
   generateTerrain(data, context, originX, originZ);
+  generateOres(data, context, originX, originZ);
   generateTrees(data, context, originX, originZ);
   generateClouds(data, context, originX, originZ);
   return data;
@@ -218,20 +220,20 @@ function generateTerrain(
         wx,
         wz,
       );
-      const deepslateTop = deepslateTopY(context.config.seed, 0, wx, wz);
+      // const deepslateTop = deepslateTopY(context.config.seed, 0, wx, wz);
 
       for (let y = context.config.minY; y <= height; y++) {
         let block: Block;
         if (y <= bedrockTop) {
           block = blockParams.bedrock;
-        } else if (y <= deepslateTop) {
-          block = deepslateOrOre(context, wx, y, wz);
         } else if (y === height) {
           block = soil.top;
         } else if (y > height - soilDepth) {
           block = soil.filler;
         } else {
-          block = stoneOrOre(context, wx, y, wz);
+          block = isDeepslate(context, wx, y, wz)
+            ? blockParams.deepslate
+            : blockParams.stone;
         }
 
         setBlock(data, x, y, z, block);
@@ -250,34 +252,47 @@ function soilLayers(biome: string, height: number, context: Context) {
   };
 }
 
-function deepslateTopY(
-  seed: number,
-  minY: number,
-  x: number,
-  z: number,
-): number {
-  return minY + Math.round((1 - hashRandom(seed, x, z, SALT.deepslate)) * 10);
-}
-
-function deepslateOrOre(
+function isDeepslate(
   context: Context,
   x: number,
   y: number,
   z: number,
-): Block {
-  let block: Block = blockParams.deepslate;
-  for (const ore of Object.values(context.config.ores)) {
-    if (ore.types.includes('deepslate')) {
-      const value = context.noise.noise3d(
-        x / ore.scale.x,
-        y / ore.scale.y,
-        z / ore.scale.z,
-      );
-      if (value > ore.scarcity) block = blockParams[ore.block];
-    }
-  }
-  return block;
+): boolean {
+  const { enabled, transitionTop, transitionBottom } = context.config.deepslate;
+  if (!enabled || y >= transitionTop) return false;
+  if (y <= transitionBottom) return true;
+  const chance = (transitionTop - y) / (transitionTop - transitionBottom);
+  return hashRandom(context.config.seed, x, z, SALT.deepslate + y) < chance;
 }
+
+// function deepslateTopY(
+//   seed: number,
+//   minY: number,
+//   x: number,
+//   z: number,
+// ): number {
+//   return minY + Math.round((1 - hashRandom(seed, x, z, SALT.deepslate)) * 10);
+// }
+
+// function deepslateOrOre(
+//   context: Context,
+//   x: number,
+//   y: number,
+//   z: number,
+// ): Block {
+//   let block: Block = blockParams.deepslate;
+//   for (const ore of Object.values(context.config.ores)) {
+//     if (ore.types.includes('deepslate')) {
+//       const value = context.noise.noise3d(
+//         x / ore.scale.x,
+//         y / ore.scale.y,
+//         z / ore.scale.z,
+//       );
+//       if (value > ore.scarcity) block = blockParams[ore.block];
+//     }
+//   }
+//   return block;
+// }
 
 function bedrockTopY(seed: number, minY: number, x: number, z: number): number {
   return (
@@ -286,20 +301,20 @@ function bedrockTopY(seed: number, minY: number, x: number, z: number): number {
   );
 }
 
-function stoneOrOre(context: Context, x: number, y: number, z: number): Block {
-  let block: Block = blockParams.stone;
-  for (const ore of Object.values(context.config.ores)) {
-    if (ore.types.includes('stone')) {
-      const value = context.noise.noise3d(
-        x / ore.scale.x,
-        y / ore.scale.y,
-        z / ore.scale.z,
-      );
-      if (value > ore.scarcity) block = blockParams[ore.block];
-    }
-  }
-  return block;
-}
+// function stoneOrOre(context: Context, x: number, y: number, z: number): Block {
+//   let block: Block = blockParams.stone;
+//   for (const ore of Object.values(context.config.ores)) {
+//     if (ore.types.includes('stone')) {
+//       const value = context.noise.noise3d(
+//         x / ore.scale.x,
+//         y / ore.scale.y,
+//         z / ore.scale.z,
+//       );
+//       if (value > ore.scarcity) block = blockParams[ore.block];
+//     }
+//   }
+//   return block;
+// }
 
 /**
  * Creates happy little clouds
@@ -461,6 +476,156 @@ function generateTrees(
       const current = data.getId(lx, y, lz);
       if (current === EMPTY_ID || context.source.leafIds.has(current)) {
         data.set(lx, y, lz, blockParams[log].id);
+      }
+    }
+  }
+}
+
+const MAX_VEIN_SIZE = CHUNK_WIDTH; // reach <= 15, so a 3x3 chunk scan is always enough
+const FACE_STEPS = [
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
+] as const;
+
+function veinRng(seed: number, chunkX: number, chunkZ: number, salt: number) {
+  return new RNG((hashRandom(seed, chunkX, chunkZ, salt) * 4294967296) >>> 0);
+}
+
+function rollCount(rng: RNG, perChunk: number): number {
+  return Math.floor(perChunk) + (rng.random() < perChunk % 1 ? 1 : 0);
+}
+
+function rollY(rng: RNG, lo: number, hi: number, distribution: string): number {
+  const t =
+    distribution === 'triangle'
+      ? (rng.random() + rng.random()) / 2
+      : rng.random();
+  return lo + Math.floor(t * (hi - lo + 1));
+}
+
+/** Grows a blob by repeatedly attaching a random face-neighbour to a random existing cell. */
+function growVein(
+  rng: RNG,
+  cells: Int32Array,
+  ax: number,
+  ay: number,
+  az: number,
+  size: number,
+): number {
+  cells[0] = ax;
+  cells[1] = ay;
+  cells[2] = az;
+  let count = 1;
+  for (let tries = 0; count < size && tries < size * 6; tries++) {
+    const base = Math.floor(rng.random() * count) * 3;
+    const step = FACE_STEPS[Math.floor(rng.random() * 6)];
+    const x = cells[base] + step[0];
+    const y = cells[base + 1] + step[1];
+    const z = cells[base + 2] + step[2];
+
+    let exists = false;
+    for (let c = 0; c < count; c++) {
+      if (
+        cells[c * 3] === x &&
+        cells[c * 3 + 1] === y &&
+        cells[c * 3 + 2] === z
+      ) {
+        exists = true;
+        break;
+      }
+    }
+    if (exists) continue;
+
+    cells[count * 3] = x;
+    cells[count * 3 + 1] = y;
+    cells[count * 3 + 2] = z;
+    count++;
+  }
+  return count;
+}
+
+function generateOres(
+  data: ChunkData,
+  context: Context,
+  originX: number,
+  originZ: number,
+) {
+  const { config } = context;
+  const chunkX = originX / CHUNK_WIDTH;
+  const chunkZ = originZ / CHUNK_WIDTH;
+  const stoneId = blockParams.stone.id;
+  const deepslateId = blockParams.deepslate.id;
+  const andesiteId = blockParams.andesite.id;
+  const dioriteId = blockParams.diorite.id;
+  const graniteId = blockParams.granite.id;
+  const tuffId = blockParams.tuff.id;
+  const cells = new Int32Array(MAX_VEIN_SIZE * 3);
+
+  let oreIndex = 0;
+  for (const ore of Object.values(config.ores)) {
+    const salt = SALT.ore + oreIndex++ * 1024;
+    const lo = Math.max(ore.minY, config.minY);
+    const hi = Math.min(ore.maxY, config.maxY - 1);
+    if (hi < lo) continue;
+
+    // Clamp here so dragging GUI sliders can never produce invalid sizes
+    const sizeA = Math.min(Math.max(ore.veinSize.min, 1), MAX_VEIN_SIZE);
+    const sizeB = Math.min(Math.max(ore.veinSize.max, 1), MAX_VEIN_SIZE);
+    const sizeMin = Math.min(sizeA, sizeB);
+    const sizeMax = Math.max(sizeA, sizeB);
+
+    const normalId = blockParams[ore.block].id;
+    const deepId = blockParams[ore.deepslateBlock ?? ore.block].id;
+
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        const nx = chunkX + dx;
+        const nz = chunkZ + dz;
+        const attempts = rollCount(
+          veinRng(config.seed, nx, nz, salt + 1023),
+          ore.veinsPerChunk,
+        );
+
+        for (let i = 0; i < attempts; i++) {
+          const rng = veinRng(config.seed, nx, nz, salt + i);
+          const ax = nx * CHUNK_WIDTH + Math.floor(rng.random() * CHUNK_WIDTH);
+          const az = nz * CHUNK_WIDTH + Math.floor(rng.random() * CHUNK_WIDTH);
+          const ay = rollY(rng, lo, hi, ore.distribution);
+          const size =
+            sizeMin + Math.floor(rng.random() * (sizeMax - sizeMin + 1));
+
+          // Too far from this chunk to touch it
+          if (
+            ax + sizeMax < originX ||
+            ax - sizeMax > originX + CHUNK_WIDTH - 1 ||
+            az + sizeMax < originZ ||
+            az - sizeMax > originZ + CHUNK_WIDTH - 1
+          )
+            continue;
+
+          const count = growVein(rng, cells, ax, ay, az, size);
+          for (let c = 0; c < count; c++) {
+            const lx = cells[c * 3] - originX;
+            const y = cells[c * 3 + 1];
+            const lz = cells[c * 3 + 2] - originZ;
+            if (y < lo || y > hi || !inLocalBounds(lx, y, lz)) continue;
+
+            const host = data.getId(lx, y, lz);
+            const stoneReplacement =
+              host === stoneId ||
+              host === andesiteId ||
+              host === dioriteId ||
+              host === graniteId;
+            const deepslateReplacement =
+              host === deepslateId || host === tuffId;
+            if (stoneReplacement) data.set(lx, y, lz, normalId);
+            else if (deepslateReplacement) data.set(lx, y, lz, deepId);
+          }
+        }
       }
     }
   }
