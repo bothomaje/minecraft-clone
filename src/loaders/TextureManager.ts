@@ -121,4 +121,51 @@ export const textures = {
   tuff: {
     side: loadTexture('textures/block/tuff.png'),
   },
+  blueIce: {
+    side: loadTexture('textures/block/blue_ice.png'),
+  },
+  buddingAmethyst: {
+    side: loadTexture('textures/block/budding_amethyst.png'),
+  },
+  rawCopperBlock: {
+    side: loadTexture('textures/block/raw_copper_block.png'),
+  },
+  rawIronBlock: {
+    side: loadTexture('textures/block/raw_iron_block.png'),
+  },
+  rawGoldBlock: {
+    side: loadTexture('textures/block/raw_gold_block.png'),
+  },
+  cobbledDeepslate: {
+    side: loadTexture('textures/block/cobbled_deepslate.png'),
+  },
+  coarseDirt: {
+    side: loadTexture('textures/block/coarse_dirt.png'),
+  },
+  clay: {
+    side: loadTexture('textures/block/clay.png'),
+  },
+  calcite: {
+    side: loadTexture('textures/block/calcite.png'),
+  },
+  obsidian: {
+    side: loadTexture('textures/block/obsidian.png'),
+  },
+  dripstoneBlock: {
+    side: loadTexture('textures/block/dripstone_block.png'),
+  },
+  ice: {
+    side: loadTexture('textures/block/ice.png'),
+  },
+  mangroveRoots: {
+    side: loadTexture('textures/block/mangrove_roots_side.png'),
+    top: loadTexture('textures/block/mangrove_roots_top.png'),
+  },
+  melon: {
+    side: loadTexture('textures/block/melon_side.png'),
+    top: loadTexture('textures/block/melon_top.png'),
+  },
+  mossBlock: {
+    side: loadTexture('textures/block/moss_block.png'),
+  },
 } satisfies Record<string, Texture>;
