@@ -1,17 +1,17 @@
 import * as THREE from 'three';
-import { CONFIG } from '../../app/config';
-import { packState } from '../blocks/blockState';
+import { CONFIG } from '../../app/Config';
+import { packState } from '../blocks/BlockState';
 import {
   blocksById,
   placeableBlockByItem,
-} from '../../objects/blocks/blocksRegistry';
+} from '../../objects/blocks/BlocksRegistry';
 import { rollBlockDrops } from '../../objects/items/ItemRegistry';
 import { Raycaster } from './Raycaster';
 import { Player } from '../../objects/entities/Player';
 import { World } from '../../objects/world/World';
 import { SoundManager } from '../../loaders/SoundManager';
 import { BlockHit } from './BlockHit';
-import { Block } from '../blocks/blockParams';
+import { Block } from '../blocks/BlockParams';
 
 const MOUSE_BUTTON = {
   LEFT: 0,
@@ -148,8 +148,8 @@ export class InteractionSystem {
       1,
     );
 
-    const stage = Math.floor(progress * CONFIG.mining.stages);
-    this.player.showCrack(pos, stage);
+    // const stage = Math.floor(progress * CONFIG.mining.stages);
+    // this.player.showCrack(pos, stage);
 
     if (progress >= 1) {
       this.finishMining();

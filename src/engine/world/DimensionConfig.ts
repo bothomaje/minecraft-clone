@@ -1,0 +1,88 @@
+import { BlockKey } from '../blocks/BlockParams';
+import { BiomeSourceId } from './BiomeSource';
+import { MAX_Y, MIN_Y } from './Constants';
+
+export type DimensionId = 'overworld';
+export interface OreParams {
+  block: BlockKey;
+  deepslateBlock?: BlockKey; // falls back to `block`
+  minY: number; // inclusive, absolute Y
+  maxY: number; // inclusive
+  distribution: 'uniform' | 'triangle'; // triangle peaks at the middle of the range
+  veinSize: { min: number; max: number }; // 1..16
+  veinsPerChunk: number; // fractional values are a chance of one more
+}
+
+export interface DimensionConfig {
+  id: DimensionId;
+  seed: number;
+  minY: number; // inclusive
+  maxY: number; // exclusive, like MAX_Y
+  seaLevel: number; // Y of the top water-filled block
+  biomeSource: BiomeSourceId;
+  terrain: {
+    soilDepth: number; // waterLevel removed
+    baseHeight: number;
+    continent: { scale: number; amplitude: number };
+    hills: {
+      scale: number;
+      amplitude: number;
+      octaves: number;
+      persistence: number;
+    };
+    mountains: {
+      scale: number;
+      amplitude: number;
+      threshold: number;
+      power: number;
+    };
+  };
+  biomes: {
+    temperature: { scale: number };
+    humidity: { scale: number };
+    snowLine: number;
+  };
+  trees: {
+    trunk: { minHeight: number; maxHeight: number };
+    canopy: { minRadius: number; maxRadius: number; density: number };
+    frequency: number;
+  };
+  deepslate: {
+    enabled: boolean;
+    transitionTop: number;
+    transitionBottom: number;
+  };
+  ores: Record<string, OreParams>;
+  caves: {
+    enabled: boolean;
+    minY: number; // lowest carved Y; keep above the bedrock layer
+    maxY: number;
+    surfaceMargin: number; // solid cover that is never carved
+    surfaceFade: number; // taper distance below the margin
+    tunnels: { scaleXZ: number; scaleY: number; thickness: number };
+    caverns: {
+      scaleXZ: number;
+      scaleY: number;
+      threshold: number;
+      minY: number;
+      maxY: number;
+    };
+    entrances: { scale: number; threshold: number }; // threshold >= 1 disables entrances
+  };
+  clouds: { enabled: boolean; scale: number; density: number; height: number };
+}
+
+export const WATER_SURFACE_OFFSET = 0.4;
+export const waterSurfaceY = (c: DimensionConfig) =>
+  c.seaLevel + WATER_SURFACE_OFFSET;
+
+export function assertDimensionBounds(c: DimensionConfig): void {
+  if (c.minY < MIN_Y || c.maxY > MAX_Y || c.minY >= c.maxY) {
+    throw new Error(
+      `Dimension ${c.id}: Y range must fit inside ${MIN_Y}..${MAX_Y}`,
+    );
+  }
+  if (c.seaLevel < c.minY || c.seaLevel >= c.maxY) {
+    throw new Error(`Dimension ${c.id}: sea level is outside its Y range`);
+  }
+}

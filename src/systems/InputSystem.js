@@ -1,4 +1,4 @@
-import { CONFIG } from '../app/config';
+import { CONFIG } from '../app/Config';
 import { state } from '../app/state';
 
 export class InputSystem {

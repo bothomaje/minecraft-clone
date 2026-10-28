@@ -1,5 +1,5 @@
 // scripts/engine/world/coords.ts
-import { CHUNK_HEIGHT, CHUNK_WIDTH, MAX_Y, MIN_Y } from './constants';
+import { CHUNK_HEIGHT, CHUNK_WIDTH, MAX_Y, MIN_Y } from './Constants';
 
 export type BlockPos = { x: number; y: number; z: number } & {
   readonly __brand: unique symbol;

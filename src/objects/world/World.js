@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Chunk } from './Chunk';
-import { CONFIG } from '../../app/config';
+import { CONFIG } from '../../app/Config';
 import { DataStore } from '../../engine/persistence/DataStore';
 import { EMPTY_ID, UNLOADED } from '../../engine/world/ChunkData';
 import {
@@ -8,7 +8,7 @@ import {
   worldToBlock,
   worldToChunkAxis,
   worldToLocalAxis,
-} from '../../engine/world/coords';
+} from '../../engine/world/Coords';
 
 export class World extends THREE.Group {
   asyncLoading = CONFIG.world.asyncLoading;

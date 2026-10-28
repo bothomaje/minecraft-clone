@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { CONFIG } from '../../app/config';
+import { CONFIG } from '../../app/Config';
 import { castVoxelRay } from './voxelRaycast';
-import { blocksById } from '../../objects/blocks/blocksRegistry';
+import { blocksById } from '../../objects/blocks/BlocksRegistry';
 import { BlockHit } from './BlockHit';
-import { BlockCategory } from '../blocks/blockParams';
+import { BlockCategory } from '../blocks/BlockParams';
 import { World } from '../../objects/world/World';
 
 export class Raycaster {

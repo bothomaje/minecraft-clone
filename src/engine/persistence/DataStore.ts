@@ -1,4 +1,4 @@
-import { chunkKey, ChunkPos } from '../world/coords';
+import { chunkKey, ChunkPos } from '../world/Coords';
 
 export type SavedEdits = { chunks: Record<string, Record<string, number>> };
 

@@ -76,7 +76,12 @@ export function rollBlockDrops(block) {
     if (Math.random() > (drop.chance ?? 1)) continue;
     const item = items[drop.item];
     if (!item) continue;
-    stacks.push(new ItemStack(item, drop.count ?? 1));
+    const count =
+      typeof drop.count === 'object'
+        ? drop.count.min +
+          Math.floor(Math.random() * (drop.count.max - drop.count.min + 1))
+        : (drop.count ?? 1);
+    stacks.push(new ItemStack(item, count));
   }
   return stacks;
 }

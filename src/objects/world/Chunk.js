@@ -1,20 +1,22 @@
 import * as THREE from 'three';
-import { blocks, blocksById } from '../blocks/blocksRegistry';
-import { CONFIG } from '../../app/config';
+import { blocks, blocksById } from '../blocks/BlocksRegistry';
+import { CONFIG } from '../../app/Config';
 import {
   ChunkData,
   packEdit,
   UNLOADED,
   unpackEdit,
 } from '../../engine/world/ChunkData';
-import { CHUNK_VOLUME } from '../../engine/world/constants';
+import { CHUNK_VOLUME } from '../../engine/world/Constants';
 import {
   inLocalBounds,
   blockIndex,
   indexToLocal,
-} from '../../engine/world/coords';
-import { setBlockMatrix } from '../../render/blockTransform';
-import { generateChunkData } from '../../engine/world/worldGenerator';
+  chunkPos,
+} from '../../engine/world/Coords';
+import { setBlockMatrix } from '../../render/BlockTransform';
+import { generateChunkData } from '../../engine/world/WorldGenerator';
+import { waterSurfaceY } from '../../engine/world/DimensionConfig';
 
 const geometry = new THREE.BoxGeometry();
 const NO_INSTANCE = -1;
@@ -52,8 +54,7 @@ export class Chunk extends THREE.Group {
     this.initializeTerrain();
     this.chunkData = generateChunkData(
       this.world.params,
-      this.position.x,
-      this.position.z,
+      chunkPos(this.chunkX, this.chunkZ),
     );
     this.loadPlayerChanges();
     this.generateMeshes();
@@ -94,7 +95,7 @@ export class Chunk extends THREE.Group {
     mesh.rotateX(-Math.PI / 2.0);
     mesh.position.set(
       this.size.width / 2,
-      this.world.params.terrain.waterLevel,
+      waterSurfaceY(this.world.params),
       this.size.width / 2,
     );
     mesh.scale.set(this.size.width, this.size.width, 1);

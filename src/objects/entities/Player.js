@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { Tool } from './Tool';
-import { CONFIG } from '../../app/config';
+import { CONFIG } from '../../app/Config';
 import { state } from '../../app/state';
 import { createPlayerCamera } from '../../scene/camera';
 import { textures } from '../../loaders/TextureManager';

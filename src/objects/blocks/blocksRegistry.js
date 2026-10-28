@@ -1,7 +1,7 @@
 import { items } from '../items/ItemRegistry';
 import { assertValidSchema } from '../../engine/blocks/blockState';
-import { blockParams } from '../../engine/blocks/blockParams';
-import { blockMaterials } from '../../render/blockMaterials';
+import { blockParams } from '../../engine/blocks/BlockParams';
+import { blockMaterials } from '../../render/BlockMaterials';
 
 export const blocks = Object.fromEntries(
   Object.entries(blockParams).map(([key, params]) => [
@@ -18,8 +18,6 @@ export const blocksById = new Map(
   Object.values(blocks).map((block) => [block.id, block]),
 );
 
-export const resources = [blocks.coalOre, blocks.ironOre];
-
 export const placeableBlockByItem = new Map([
   [items.dirt, blockParams.dirt],
   [items.cobblestone, blockParams.stone],
@@ -31,4 +29,5 @@ export const placeableBlockByItem = new Map([
   [items.cactus, blockParams.cactus],
   [items.jungleLog, blockParams.jungleLog],
   [items.jungleLeaves, blockParams.jungleLeaves],
+  [items.deepslate, blockParams.deepslate],
 ]);

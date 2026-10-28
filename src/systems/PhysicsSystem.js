@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { CONFIG } from '../app/config';
-import { blocksById } from '../objects/blocks/blocksRegistry';
+import { CONFIG } from '../app/Config';
+import { blocksById } from '../objects/blocks/BlocksRegistry';
 
 const collisionMaterial = new THREE.MeshBasicMaterial(
   CONFIG.physics.debug.collision.material,
