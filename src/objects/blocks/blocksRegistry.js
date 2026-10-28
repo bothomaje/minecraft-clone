@@ -29,4 +29,5 @@ export const placeableBlockByItem = new Map([
   [items.cactus, blockParams.cactus],
   [items.jungleLog, blockParams.jungleLog],
   [items.jungleLeaves, blockParams.jungleLeaves],
+  [items.deepslate, blockParams.deepslate],
 ]);

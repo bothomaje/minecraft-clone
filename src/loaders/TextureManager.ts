@@ -73,4 +73,40 @@ export const textures = {
   andesite: {
     side: loadTexture('textures/block/andesite.png'),
   },
+  copperOre: {
+    side: loadTexture('textures/block/copper_ore.png'),
+  },
+  deepslateCopperOre: {
+    side: loadTexture('textures/block/deepslate_copper_ore.png'),
+  },
+  emeraldOre: {
+    side: loadTexture('textures/block/emerald_ore.png'),
+  },
+  deepslateEmeraldOre: {
+    side: loadTexture('textures/block/deepslate_emerald_ore.png'),
+  },
+  lapisOre: {
+    side: loadTexture('textures/block/lapis_ore.png'),
+  },
+  deepslateLapisOre: {
+    side: loadTexture('textures/block/deepslate_lapis_ore.png'),
+  },
+  goldOre: {
+    side: loadTexture('textures/block/gold_ore.png'),
+  },
+  deepslateGoldOre: {
+    side: loadTexture('textures/block/deepslate_gold_ore.png'),
+  },
+  redstoneOre: {
+    side: loadTexture('textures/block/redstone_ore.png'),
+  },
+  deepslateRedstoneOre: {
+    side: loadTexture('textures/block/deepslate_redstone_ore.png'),
+  },
+  diamondOre: {
+    side: loadTexture('textures/block/diamond_ore.png'),
+  },
+  deepslateDiamondOre: {
+    side: loadTexture('textures/block/deepslate_diamond_ore.png'),
+  },
 } satisfies Record<string, Texture>;

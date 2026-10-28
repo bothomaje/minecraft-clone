@@ -11,7 +11,7 @@ export type BlockCategory = (typeof BlockCategory)[keyof typeof BlockCategory];
 
 export interface Drop {
   item: string;
-  count: number;
+  count: number | { min: number; max: number };
   chance?: number;
 }
 
@@ -266,6 +266,114 @@ export const blockParams = {
     opaque: true,
     hardness: 4.5,
     drops: [{ item: 'ironOre', count: 1 }],
+  },
+  copperOre: {
+    id: 566,
+    name: 'copper_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    drops: [],
+  },
+  deepslateCopperOre: {
+    id: 663,
+    name: 'deepslate_copper_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [],
+  },
+  emeraldOre: {
+    id: 129,
+    name: 'emerald_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    drops: [],
+  },
+  deepslateEmeraldOre: {
+    id: 662,
+    name: 'deepslate_emerald_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [],
+  },
+  lapisOre: {
+    id: 21,
+    name: 'lapis_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    drops: [],
+  },
+  deepslateLapisOre: {
+    id: 655,
+    name: 'deepslate_lapis_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [],
+  },
+  goldOre: {
+    id: 14,
+    name: 'gold_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    drops: [],
+  },
+  deepslateGoldOre: {
+    id: 657,
+    name: 'deepslate_gold_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [],
+  },
+  redstoneOre: {
+    id: 73,
+    name: 'redstone_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    drops: [],
+  },
+  deepslateRedstoneOre: {
+    id: 658,
+    name: 'deepslate_redstone_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [],
+  },
+  diamondOre: {
+    id: 56,
+    name: 'diamond_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 3,
+    drops: [],
+  },
+  deepslateDiamondOre: {
+    id: 660,
+    name: 'deepslate_diamond_ore',
+    category: BlockCategory.SOLID,
+    solid: true,
+    opaque: true,
+    hardness: 4.5,
+    drops: [],
   },
 } satisfies Record<string, Block>;
 
