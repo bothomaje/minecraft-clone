@@ -173,7 +173,7 @@ export const blockParams = {
   oakLeaves: {
     id: 18,
     name: 'oak_leaves',
-    category: BlockCategory.SOLID,
+    category: BlockCategory.CUTOUT,
     solid: true,
     opaque: false,
     hardness: 0.2,
@@ -221,9 +221,9 @@ export const blockParams = {
     drops: [{ item: 'jungleLog', count: 1 }],
   },
   jungleLeaves: {
-    id: 572,
+    id: 1057,
     name: 'jungle_leaves',
-    category: BlockCategory.SOLID,
+    category: BlockCategory.CUTOUT,
     solid: true,
     opaque: false,
     hardness: 0.2,
@@ -513,9 +513,9 @@ export const blockParams = {
   ice: {
     id: 79,
     name: 'ice',
-    category: BlockCategory.SOLID,
+    category: BlockCategory.TRANSPARENT,
     solid: true,
-    opaque: true,
+    opaque: false,
     hardness: 0.5,
     drops: [],
   },

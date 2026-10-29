@@ -3,7 +3,7 @@ import { SceneManager } from '../scene/SceneManager';
 import { createOrbitCamera } from '../scene/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { CONFIG } from './Config';
-import { World } from '../objects/world/World';
+import { World } from '../engine/world/World';
 import { Player } from '../objects/entities/Player';
 import { ModelLoader } from '../loaders/ModelLoader';
 import { Lighting } from '../scene/Lighting';
@@ -17,6 +17,7 @@ import { PersistenceSystem } from '../systems/PersistenceSystem';
 import { SoundManager } from '../loaders/SoundManager';
 import { InventoryUi } from '../ui/InventoryUi';
 import { surfaceHeightAt } from '../engine/world/WorldGenerator';
+import { WorldRenderer } from '../render/WorldRenderer';
 
 export class App {
   stats = new Stats();
@@ -49,8 +50,10 @@ export class App {
     this.controls.target.copy(CONFIG.player.position);
     this.controls.update();
 
+    this.worldRenderer = new WorldRenderer(this.world);
+    this.worldRenderer.mount(scene);
     this.world.generate();
-    scene.add(this.world);
+    // scene.add(this.world);
 
     this.player = new Player(scene);
     this.orbitCamera.position.set(
@@ -97,6 +100,7 @@ export class App {
       this.world.update(this.player);
       this.lighting.update(this.player);
     }
+    this.worldRenderer.update();
 
     this.renderer.render(
       this.scene,

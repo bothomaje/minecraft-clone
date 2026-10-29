@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { CHUNK_WIDTH, MAX_Y, MIN_Y } from '../engine/world/Constants';
 import { createOverworldConfig } from '../engine/world/OverworldConfig';
 
 export const CONFIG = {
@@ -128,13 +127,7 @@ export const CONFIG = {
   world: {
     asyncLoading: true,
     drawDistance: 2,
-    headroom: 64,
     regenerateDebounceMs: 200,
-    chunkSize: {
-      width: CHUNK_WIDTH,
-      minY: MIN_Y,
-      maxY: MAX_Y,
-    },
     params: createOverworldConfig(),
     water: {
       material: {

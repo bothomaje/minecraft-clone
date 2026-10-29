@@ -53,7 +53,7 @@ export const items = {
     icon: '/textures/block/jungle_log.png',
   }),
   jungleLeaves: new Item({
-    id: 572,
+    id: 1057,
     name: 'jungle_leaves',
     icon: '/textures/block/jungle_leaves.png',
   }),

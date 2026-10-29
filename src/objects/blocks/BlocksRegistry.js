@@ -1,14 +1,8 @@
 import { items } from '../items/ItemRegistry';
-import { assertValidSchema } from '../../engine/blocks/blockState';
+import { assertValidSchema } from '../../engine/blocks/BlockState';
 import { blockParams } from '../../engine/blocks/BlockParams';
-import { blockMaterials } from '../../render/BlockMaterials';
 
-export const blocks = Object.fromEntries(
-  Object.entries(blockParams).map(([key, params]) => [
-    key,
-    { ...params, material: blockMaterials[key]?.material },
-  ]),
-);
+export const blocks = blockParams;
 
 for (const block of Object.values(blockParams)) {
   if (block.stateSchema) assertValidSchema(block.name, block.stateSchema);
@@ -20,7 +14,7 @@ export const blocksById = new Map(
 
 export const placeableBlockByItem = new Map([
   [items.dirt, blockParams.dirt],
-  [items.cobblestone, blockParams.stone],
+  [items.cobblestone, blockParams.cobblestone],
   [items.sand, blockParams.sand],
   [items.ironOre, blockParams.ironOre],
   [items.oakLog, blockParams.oakLog],

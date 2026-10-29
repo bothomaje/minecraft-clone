@@ -4,7 +4,7 @@ import { castVoxelRay } from './voxelRaycast';
 import { blocksById } from '../../objects/blocks/BlocksRegistry';
 import { BlockHit } from './BlockHit';
 import { BlockCategory } from '../blocks/BlockParams';
-import { World } from '../../objects/world/World';
+import { World } from '../world/World';
 
 export class Raycaster {
   private origin = new THREE.Vector3();

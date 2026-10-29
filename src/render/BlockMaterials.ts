@@ -1,36 +1,30 @@
 import { textures, Texture } from '../loaders/TextureManager';
 import * as THREE from 'three';
 
+type RenderLayer = 'opaque' | 'cutout' | 'transparent';
+const layerFlags = (layer: RenderLayer) => ({
+  transparent: layer === 'transparent',
+  alphaTest: layer === 'cutout' ? 0.5 : 0,
+  depthWrite: layer !== 'transparent',
+});
+
 function lambert(
   map: Texture,
   color: THREE.ColorRepresentation = 0xffffff,
-  transparent: boolean = false,
+  layer: RenderLayer = 'opaque',
 ) {
-  const materials: THREE.MeshLambertMaterial[] = [];
+  const make = (t: THREE.Texture | undefined) =>
+    new THREE.MeshLambertMaterial({ map: t, color, ...layerFlags(layer) });
   const multiFaced = Object.hasOwn(map, 'top') || Object.hasOwn(map, 'bottom');
-
-  if (multiFaced) {
-    materials.push(
-      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
-      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
-      new THREE.MeshLambertMaterial({ map: map.top, transparent, color }),
-      new THREE.MeshLambertMaterial({
-        map: map.bottom ?? map.top,
-        transparent,
-        color,
-      }),
-      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
-      new THREE.MeshLambertMaterial({ map: map.side, transparent, color }),
-    );
-
-    return materials;
-  }
-
-  return new THREE.MeshLambertMaterial({
-    map: map.side,
-    transparent,
-    color,
-  });
+  if (!multiFaced) return make(map.side);
+  return [
+    map.side,
+    map.side,
+    map.top,
+    map.bottom ?? map.top,
+    map.side,
+    map.side,
+  ].map(make);
 }
 
 export const blockMaterials = {
@@ -65,7 +59,7 @@ export const blockMaterials = {
     material: lambert(textures.oakLog),
   },
   oakLeaves: {
-    material: lambert(textures.oakLeaves, 0x79c05a, true),
+    material: lambert(textures.oakLeaves, 0x79c05a, 'cutout'),
   },
   snow: {
     material: lambert(textures.snow),
@@ -77,7 +71,7 @@ export const blockMaterials = {
     material: lambert(textures.jungleLog),
   },
   jungleLeaves: {
-    material: lambert(textures.jungleLeaves, 0x79c05a, true),
+    material: lambert(textures.jungleLeaves, 0x79c05a, 'cutout'),
   },
   deepslate: { material: lambert(textures.deepslate) },
   deepslateCoalOre: { material: lambert(textures.deepslateCoalOre) },
@@ -111,7 +105,7 @@ export const blockMaterials = {
   calcite: { material: lambert(textures.calcite) },
   obsidian: { material: lambert(textures.obsidian) },
   dripstoneBlock: { material: lambert(textures.dripstoneBlock) },
-  ice: { material: lambert(textures.ice) },
+  ice: { material: lambert(textures.ice, 0xffffff, 'transparent') },
   mangroveRoots: { material: lambert(textures.mangroveRoots) },
   melon: { material: lambert(textures.melon) },
   mossBlock: { material: lambert(textures.mossBlock) },
