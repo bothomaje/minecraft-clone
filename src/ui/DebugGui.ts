@@ -1,8 +1,10 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { resources } from '../objects/blocks/BlocksRegistry';
-import { CONFIG } from '../app/Config';
+import { CONFIG } from '../core/Config';
+import { Scene } from 'three';
+import { World } from '../engine/world/World';
+import { Player } from '../engine/entities/Player';
 
-export function createDebugGui(scene, world, player) {
+export function createDebugGui(scene: Scene, world: World, player: Player) {
   const gui = new GUI();
 
   const actions = {
@@ -17,9 +19,9 @@ export function createDebugGui(scene, world, player) {
 
   gui.add(actions, 'fullscreen').name('Toggle Full Screen');
 
-  const sceneFolder = gui.addFolder('Scene').close();
-  sceneFolder.add(scene.fog, 'near', 1, 200, 1).name('Fog Near');
-  sceneFolder.add(scene.fog, 'far', 1, 200, 1).name('Fog Far');
+  // const sceneFolder = gui.addFolder('Scene').close();
+  // sceneFolder.add(scene.fog, 'near', 1, 200, 1).name('Fog Near');
+  // sceneFolder.add(scene.fog, 'far', 1, 200, 1).name('Fog Far');
 
   const playerFolder = gui.addFolder('Player').close();
   playerFolder.add(player, 'maxSpeed', 1, 20).name('Max Speed');
@@ -28,9 +30,6 @@ export function createDebugGui(scene, world, player) {
   terrainFolder.add(world, 'asyncLoading').name('Async Chunk Loading');
   terrainFolder.add(world, 'drawDistance', 0, 5, 1).name('Draw Distance');
   terrainFolder.add(world.params, 'seed', 1, 10000).name('Seed');
-  terrainFolder
-    .add(world.params.terrain, 'waterLevel', 0, 60, 1)
-    .name('Water Level');
   terrainFolder
     .add(world.params.terrain, 'soilDepth', 1, 8, 1)
     .name('Soil Depth');
@@ -80,17 +79,6 @@ export function createDebugGui(scene, world, player) {
     .add(world.params.biomes, 'snowLine', 20, 87, 1)
     .name('Snow Line');
 
-  const resourcesFolder = terrainFolder.addFolder('Resources').close();
-  resources.forEach((resource) => {
-    const resourceFolder = resourcesFolder.addFolder(resource.name).close();
-    resourceFolder.add(resource, 'scarcity', 0, 1).name('Scarcity');
-
-    const scaleFolder = resourceFolder.addFolder('Scale');
-    scaleFolder.add(resource.scale, 'x', 10, 100).name('X Scale');
-    scaleFolder.add(resource.scale, 'y', 10, 100).name('Y Scale');
-    scaleFolder.add(resource.scale, 'z', 10, 100).name('Z Scale');
-  });
-
   const treesFolder = terrainFolder.addFolder('Trees').close();
   treesFolder.add(world.params.trees, 'frequency', 0, 0.1).name('Frequency');
   treesFolder
@@ -116,7 +104,7 @@ export function createDebugGui(scene, world, player) {
     .add(world.params.clouds, 'height', 0, 87, 1)
     .name('Cloud Height');
 
-  let regenerateTimeout = null;
+  let regenerateTimeout: number;
   gui.onChange(() => {
     clearTimeout(regenerateTimeout);
     regenerateTimeout = setTimeout(() => {

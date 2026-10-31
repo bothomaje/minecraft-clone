@@ -1,15 +1,20 @@
-import { CONFIG } from '../app/Config';
+import { CONFIG } from '../core/Config';
 import { state } from '../app/state';
 import { mergeInto } from '../engine/persistence/mergeParams';
+import { World } from '../engine/world/World';
+import { Player } from '../engine/entities/Player';
 
 export class PersistenceSystem {
-  constructor(world, player) {
+  world: World;
+  player: Player;
+
+  constructor(world: World, player: Player) {
     this.world = world;
     this.player = player;
     document.addEventListener('keydown', this.onKeyDown.bind(this));
   }
 
-  onKeyDown(event) {
+  onKeyDown(event: KeyboardEvent) {
     switch (event.code) {
       case 'F1':
         this.save();
@@ -73,14 +78,14 @@ export class PersistenceSystem {
     this.world.generate();
   }
 
-  showMessage(message) {
+  showMessage(message: string) {
     state.status = message;
     setTimeout(() => {
       state.status = '';
     }, 3000);
   }
 
-  readJson(text) {
+  readJson(text: string) {
     try {
       return JSON.parse(text);
     } catch {

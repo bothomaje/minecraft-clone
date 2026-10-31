@@ -51,7 +51,7 @@ const sounds = {
   wool: soundSet('wool'),
 };
 
-export const blockParams = {
+export const blockParams: Record<string, Block> = {
   empty: {
     id: 0,
     name: 'empty',
@@ -546,6 +546,6 @@ export const blockParams = {
     hardness: 0.1,
     drops: [],
   },
-} satisfies Record<string, Block>;
+};
 
 export type BlockKey = keyof typeof blockParams;

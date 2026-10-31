@@ -1,17 +1,22 @@
+import { Item } from './Item';
+
 /**
  * Represents a stack of a given item.
  */
 export class ItemStack {
-  constructor(item, count = 1) {
+  item: Item;
+  count: number;
+
+  constructor(item: Item, count = 1) {
     this.item = item;
     this.count = count;
   }
 
-  get isEmpty() {
+  get isEmpty(): boolean {
     return !this.item || this.count <= 0;
   }
 
-  get isFull() {
+  get isFull(): boolean {
     return this.count >= this.item.maxStackSize;
   }
 
@@ -19,7 +24,7 @@ export class ItemStack {
    * Checks if another stack holds the same item and has room.
    * @param {ItemStack} other
    */
-  canStackWith(other) {
+  canStackWith(other: ItemStack): boolean {
     return !!other && other.item.id === this.item.id && !this.isFull;
   }
 
@@ -27,13 +32,13 @@ export class ItemStack {
    * Removes `amount` from this stack and returns it as a new stack.
    * @param {number} amount
    */
-  split(amount) {
+  split(amount: number): ItemStack {
     const taken = Math.min(amount, this.count);
     this.count -= taken;
     return new ItemStack(this.item, taken);
   }
 
-  clone() {
+  clone(): ItemStack {
     return new ItemStack(this.item, this.count);
   }
 }

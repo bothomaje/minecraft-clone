@@ -1,8 +1,11 @@
-import { CONFIG } from '../app/Config';
+import { CONFIG } from '../core/Config';
 import { state } from '../app/state';
+import { Player } from '../engine/entities/Player';
 
 export class InputSystem {
-  constructor(player) {
+  player: Player;
+
+  constructor(player: Player) {
     this.player = player;
     document.addEventListener('keydown', this.onKeyDown.bind(this));
     document.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -12,7 +15,7 @@ export class InputSystem {
    * Event handler for 'keydown' event
    * @param {KeyboardEvent} event
    */
-  onKeyDown(event) {
+  onKeyDown(event: KeyboardEvent) {
     if (!this.player.controls.isLocked) {
       this.player.controls.lock();
     }
@@ -54,7 +57,7 @@ export class InputSystem {
    * Event handler for 'keyup' event
    * @param {KeyboardEvent} event
    */
-  onKeyUp(event) {
+  onKeyUp(event: KeyboardEvent) {
     switch (event.code) {
       case 'KeyW':
         this.player.input.z = 0;

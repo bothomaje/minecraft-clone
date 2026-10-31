@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { CONFIG } from '../../app/Config';
+import { CONFIG } from '../../core/Config';
 import { castVoxelRay } from './voxelRaycast';
-import { blocksById } from '../../objects/blocks/BlocksRegistry';
+import { blocksById } from '../../engine/blocks/BlocksRegistry';
 import { BlockHit } from './BlockHit';
 import { BlockCategory } from '../blocks/BlockParams';
 import { World } from '../world/World';

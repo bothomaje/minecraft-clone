@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CONFIG } from '../../app/Config';
+import { CONFIG } from '../../core/Config';
 
 export class Tool extends THREE.Group {
   animate = false;
@@ -7,8 +7,8 @@ export class Tool extends THREE.Group {
   animationDuration = CONFIG.tool.animation.duration;
   animationStart = 0;
   animationSpeed = CONFIG.tool.animation.speed;
-  animation = undefined;
-  toolMesh = undefined;
+  animation: number | undefined = undefined;
+  toolMesh: THREE.Object3D | undefined = undefined;
   type = 'pickaxe';
 
   get animationTime() {
@@ -28,7 +28,7 @@ export class Tool extends THREE.Group {
 
     this.animation = setTimeout(() => {
       this.animate = false;
-      this.toolMesh.rotation.z = 0;
+      if (this.toolMesh) this.toolMesh.rotation.z = 0;
     }, this.animationDuration);
   }
 
@@ -47,13 +47,17 @@ export class Tool extends THREE.Group {
    * Sets the active tool mesh
    * @param {THREE.Mesh} mesh
    */
-  setMesh(mesh) {
+  setMesh(mesh: THREE.Object3D) {
     this.clear();
 
     this.toolMesh = mesh;
-    this.add(this.toolMesh);
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
+    this.add(mesh);
+    mesh.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.receiveShadow = true;
+        child.castShadow = true;
+      }
+    });
 
     this.position.copy(CONFIG.tool.position);
     this.scale.setScalar(CONFIG.tool.scale);

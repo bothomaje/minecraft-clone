@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CONFIG } from '../app/Config';
+import { CONFIG } from '../core/Config';
 
 export function createOrbitCamera() {
   const camera = new THREE.PerspectiveCamera(

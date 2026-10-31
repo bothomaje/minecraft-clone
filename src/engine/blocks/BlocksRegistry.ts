@@ -1,4 +1,4 @@
-import { items } from '../items/ItemRegistry';
+import { items } from '../../engine/items/ItemRegistry';
 import { assertValidSchema } from '../../engine/blocks/BlockState';
 import { blockParams } from '../../engine/blocks/BlockParams';
 

@@ -1,5 +1,6 @@
-import { CONFIG } from '../../app/Config';
+import { CONFIG } from '../../core/Config';
 import { state } from '../../app/state';
+import { Item } from './Item';
 import { itemsById } from './ItemRegistry';
 import { ItemStack } from './ItemStack';
 
@@ -9,22 +10,22 @@ export class Inventory {
   slots = new Array(TOTAL_SLOTS).fill(null);
   selectedSlot = state.activeSlot;
 
-  getSlot(index) {
+  getSlot(index: number): ItemStack {
     return this.slots[index] ?? null;
   }
 
-  setSlot(index, stack) {
+  setSlot(index: number, stack: ItemStack | null) {
     this.slots[index] = stack && !stack.isEmpty ? stack : null;
   }
 
-  countItem(item) {
+  countItem(item: Item): number {
     return this.slots.reduce(
       (total, stack) => total + (stack?.item.id === item.id ? stack.count : 0),
       0,
     );
   }
 
-  hasItem(item, count = 1) {
+  hasItem(item: Item, count = 1): boolean {
     return this.countItem(item) >= count;
   }
 
@@ -33,7 +34,7 @@ export class Inventory {
    * @param {ItemStack} stack
    * @returns {number} leftover count that didn't fit
    */
-  addItem(stack) {
+  addItem(stack: ItemStack): number {
     let remaining = stack.count;
 
     for (const existing of this.slots) {
@@ -62,7 +63,7 @@ export class Inventory {
    * Removes up to `count` of an item across slots.
    * @returns {number} amount actually removed
    */
-  removeItem(item, count = 1) {
+  removeItem(item: Item, count = 1): number {
     let remaining = count;
 
     for (let i = 0; i < this.slots.length && remaining > 0; i++) {
@@ -78,7 +79,7 @@ export class Inventory {
     return count - remaining;
   }
 
-  mergeStacks(fromIndex, toIndex) {
+  mergeStacks(fromIndex: number, toIndex: number) {
     const from = this.slots[fromIndex];
     const to = this.slots[toIndex];
     if (!from || !to || !to.canStackWith(from)) return;
@@ -90,7 +91,7 @@ export class Inventory {
     if (from.count <= 0) this.slots[fromIndex] = null;
   }
 
-  splitStack(index, amount) {
+  splitStack(index: number, amount: number): ItemStack | null {
     const stack = this.slots[index];
     if (!stack) return null;
 
@@ -102,7 +103,7 @@ export class Inventory {
     return split;
   }
 
-  swapStacks(indexA, indexB) {
+  swapStacks(indexA: number, indexB: number) {
     [this.slots[indexA], this.slots[indexB]] = [
       this.slots[indexB],
       this.slots[indexA],
@@ -112,7 +113,7 @@ export class Inventory {
   /**
    * Serializes the inventory to a plain, JSON-safe array.
    */
-  serialize() {
+  serialize(): ({ itemId: number; count: number } | null)[] {
     return this.slots.map((stack) =>
       stack ? { itemId: stack.item.id, count: stack.count } : null,
     );
@@ -122,7 +123,7 @@ export class Inventory {
    * Restores slots from data produced by `serialize()`. Unknown item ids
    * (e.g. from an older save) are dropped rather than throwing.
    */
-  restore(serialized) {
+  restore(serialized: ({ itemId: number; count: number } | null)[]) {
     this.slots = serialized.map((entry) => {
       if (!entry) return null;
 

@@ -1,4 +1,4 @@
-import { CONFIG } from '../../app/Config';
+import { CONFIG } from '../../core/Config';
 import { DataStore } from '../persistence/DataStore';
 import {
   ChunkData,
@@ -16,7 +16,7 @@ import {
   worldToLocalAxis,
 } from './Coords';
 import { generateChunkData } from './WorldGenerator';
-import { blocksById } from '../../objects/blocks/BlocksRegistry';
+import { blocksById } from '../blocks/BlocksRegistry';
 import { Block } from '../blocks/BlockParams';
 import { CHUNK_WIDTH } from './Constants';
 

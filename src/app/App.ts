@@ -2,9 +2,9 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { SceneManager } from '../scene/SceneManager';
 import { createOrbitCamera } from '../scene/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import { CONFIG } from './Config';
+import { CONFIG } from '../core/Config';
 import { World } from '../engine/world/World';
-import { Player } from '../objects/entities/Player';
+import { Player } from '../engine/entities/Player';
 import { ModelLoader } from '../loaders/ModelLoader';
 import { Lighting } from '../scene/Lighting';
 import { Hud } from '../ui/Hud';
@@ -18,10 +18,25 @@ import { SoundManager } from '../loaders/SoundManager';
 import { InventoryUi } from '../ui/InventoryUi';
 import { surfaceHeightAt } from '../engine/world/WorldGenerator';
 import { WorldRenderer } from '../render/WorldRenderer';
+import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 
 export class App {
   stats = new Stats();
   previousTime = performance.now();
+  scene: Scene;
+  renderer: WebGLRenderer;
+  orbitCamera: PerspectiveCamera;
+  controls: OrbitControls;
+  world: World;
+  worldRenderer: WorldRenderer;
+  player: Player;
+  modelLoader: ModelLoader;
+  lighting: Lighting;
+  hud: Hud;
+  inventoryUi: InventoryUi;
+  physics: PhysicsSystem;
+  sounds: SoundManager;
+  interaction: InteractionSystem;
 
   constructor() {
     document.body.append(this.stats.dom);
@@ -65,7 +80,7 @@ export class App {
 
     this.modelLoader = new ModelLoader();
     this.modelLoader.loadModels((models) => {
-      this.player.tool.setMesh(models.pickaxe);
+      if (models.pickaxe) this.player.tool.setMesh(models.pickaxe);
     });
 
     this.lighting = new Lighting(scene);
@@ -85,8 +100,8 @@ export class App {
   }
 
   animate = () => {
-    let currentTime = performance.now();
-    let dt = (currentTime - this.previousTime) / 1000;
+    const currentTime = performance.now();
+    const dt = (currentTime - this.previousTime) / 1000;
 
     requestAnimationFrame(this.animate);
 
@@ -94,7 +109,7 @@ export class App {
     this.inventoryUi.update();
 
     if (this.player.controls.isLocked) {
-      this.player.update(this.world);
+      this.player.update();
       this.interaction.update(dt);
       this.physics.update(dt, this.player, this.world);
       this.world.update(this.player);

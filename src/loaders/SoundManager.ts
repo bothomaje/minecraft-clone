@@ -1,12 +1,18 @@
 import * as THREE from 'three';
+import { SoundSet } from '../engine/blocks/BlockParams';
 
 const audioLoader = new THREE.AudioLoader();
 
-export class SoundManager {
-  #buffers = new Map(); // <path, AudioBuffer>
-  #pool = new Map(); // <path, THREE.Audio>
+type SoundEmitter = {
+  sounds?: SoundSet;
+};
 
-  constructor(listener) {
+export class SoundManager {
+  private buffers = new Map(); // <path, AudioBuffer>
+  private pool = new Map(); // <path, THREE.Audio>
+  listener: THREE.AudioListener;
+
+  constructor(listener: THREE.AudioListener) {
     this.listener = listener;
   }
 
@@ -14,13 +20,13 @@ export class SoundManager {
    *
    * @param {string} eventName
    */
-  play(emitter, eventName) {
+  play(emitter: SoundEmitter, eventName: keyof SoundSet) {
     const path = emitter?.sounds?.[eventName];
     if (!path) return;
 
-    const buffer = this.#buffers.get(path);
+    const buffer = this.buffers.get(path);
     if (buffer) {
-      this.#playBuffer(path, buffer);
+      this.playBuffer(path, buffer);
       return;
     }
 
@@ -29,19 +35,19 @@ export class SoundManager {
     audioLoader.load(
       path,
       (loaded) => {
-        this.#buffers.set(path, loaded);
-        this.#playBuffer(path, loaded);
+        this.buffers.set(path, loaded);
+        this.playBuffer(path, loaded);
       },
       undefined,
       (err) => console.warn(`SoundManager: failed to load "${path}"`, err),
     );
   }
 
-  #playBuffer(path, buffer) {
-    let audio = this.#pool.get(path);
+  private playBuffer(path: string, buffer: AudioBuffer) {
+    let audio = this.pool.get(path);
     if (!audio) {
       audio = new THREE.Audio(this.listener);
-      this.#pool.set(path, audio);
+      this.pool.set(path, audio);
     }
 
     audio.setBuffer(buffer);

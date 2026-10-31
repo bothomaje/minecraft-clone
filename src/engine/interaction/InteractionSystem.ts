@@ -1,13 +1,10 @@
 import * as THREE from 'three';
-import { CONFIG } from '../../app/Config';
+import { CONFIG } from '../../core/Config';
 import { packState } from '../blocks/BlockState';
-import {
-  blocksById,
-  placeableBlockByItem,
-} from '../../objects/blocks/BlocksRegistry';
-import { rollBlockDrops } from '../../objects/items/ItemRegistry';
+import { blocksById, placeableBlockByItem } from '../blocks/BlocksRegistry';
+import { rollBlockDrops } from '../items/ItemRegistry';
 import { Raycaster } from './Raycaster';
-import { Player } from '../../objects/entities/Player';
+import { Player } from '../../engine/entities/Player';
 import { World } from '../world/World';
 import { SoundManager } from '../../loaders/SoundManager';
 import { BlockHit } from './BlockHit';

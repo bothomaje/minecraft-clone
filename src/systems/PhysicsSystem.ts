@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import { CONFIG } from '../app/Config';
-import { blocksById } from '../objects/blocks/BlocksRegistry';
+import { CONFIG } from '../core/Config';
+import { blocksById } from '../engine/blocks/BlocksRegistry';
+import { Player } from '../engine/entities/Player';
+import { World } from '../engine/world/World';
 
 const collisionMaterial = new THREE.MeshBasicMaterial(
   CONFIG.physics.debug.collision.material,
@@ -20,6 +22,12 @@ const contactGeometry = new THREE.SphereGeometry(
   CONFIG.physics.debug.contact.geometry.heightSegments,
 );
 
+interface Collision {
+  block: { x: number; y: number; z: number };
+  contactPoint: { x: number; y: number; z: number };
+  normal: THREE.Vector3;
+  overlap: number;
+}
 export class PhysicsSystem {
   simulationRate = CONFIG.physics.simulationRate;
   timestep = 1 / this.simulationRate;
@@ -27,7 +35,7 @@ export class PhysicsSystem {
   gravity = CONFIG.physics.gravity;
   helpers = new THREE.Group();
 
-  constructor(scene) {
+  constructor(scene: THREE.Scene) {
     this.helpers = new THREE.Group();
 
     if (CONFIG.physics.debug.enabled) {
@@ -41,7 +49,7 @@ export class PhysicsSystem {
    * @param {Player} player
    * @param {Chunk} world
    */
-  update(dt, player, world) {
+  update(dt: number, player: Player, world: World) {
     if (!world.isLoadedAt(player.position.x, player.position.z)) {
       this.accumulator = 0;
       return;
@@ -65,7 +73,7 @@ export class PhysicsSystem {
    * @param {Player} player
    * @param {Chunk} world
    */
-  detectCollisions(player, world) {
+  detectCollisions(player: Player, world: World) {
     player.onGround = false;
 
     const candidates = this.broadPhase(player, world);
@@ -83,7 +91,7 @@ export class PhysicsSystem {
    * @param {Chunk} world
    * @returns {[]}
    */
-  broadPhase(player, world) {
+  broadPhase(player: Player, world: World) {
     const candidates = [];
 
     // Get the extents of the player
@@ -126,7 +134,10 @@ export class PhysicsSystem {
    * @param {Player} player
    * @returns {[]}
    */
-  narrowPhase(candidates, player) {
+  narrowPhase(
+    candidates: { x: number; y: number; z: number }[],
+    player: Player,
+  ): Collision[] {
     const collisions = [];
 
     for (const block of candidates) {
@@ -189,7 +200,7 @@ export class PhysicsSystem {
    * @param {object} collisions
    * @param {Player} player
    */
-  resolveCollisions(collisions, player) {
+  resolveCollisions(collisions: Collision[], player: Player) {
     // Resolve the collisions in order of the smallest overlap to the largest
     collisions.sort((a, b) => a.overlap - b.overlap);
 
@@ -198,16 +209,16 @@ export class PhysicsSystem {
         continue;
 
       // Adjust position of player so the block and the player are no longer overlapping
-      let deltaPosition = collision.normal
+      const deltaPosition = collision.normal
         .clone()
         .multiplyScalar(collision.overlap);
       player.position.add(deltaPosition);
 
       // Negate player's velocity along the collision normal
       // Get the magnitude of the player's velocity along the collision normal
-      let magnitude = player.worldVelocity.dot(collision.normal);
+      const magnitude = player.worldVelocity.dot(collision.normal);
       // Remove that part of the velocity from the player's velocity
-      let velocityAdjustment = collision.normal
+      const velocityAdjustment = collision.normal
         .clone()
         .multiplyScalar(magnitude);
 
@@ -216,13 +227,13 @@ export class PhysicsSystem {
     }
   }
 
-  addCollisionHelper(block) {
+  addCollisionHelper(block: { x: number; y: number; z: number }) {
     const blockMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
     blockMesh.position.copy(block);
     this.helpers.add(blockMesh);
   }
 
-  addContactPointHelper(point) {
+  addContactPointHelper(point: { x: number; y: number; z: number }) {
     const contactMesh = new THREE.Mesh(contactGeometry, contactMaterial);
     contactMesh.position.copy(point);
     this.helpers.add(contactMesh);
@@ -234,7 +245,10 @@ export class PhysicsSystem {
    * @param {Player} player
    * @returns {boolean}
    */
-  pointInPlayerBoundingCylinder(p, player) {
+  pointInPlayerBoundingCylinder(
+    p: { x: number; y: number; z: number },
+    player: Player,
+  ) {
     const dx = p.x - player.position.x;
     const dy = p.y - (player.position.y - player.height / 2);
     const dz = p.z - player.position.z;

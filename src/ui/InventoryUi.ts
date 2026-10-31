@@ -1,13 +1,20 @@
+import { Player } from '../engine/entities/Player';
+import { ItemStack } from '../engine/items/ItemStack';
+
 const HOTBAR_SIZE = 9;
 const MAIN_SIZE = 27;
 
 export class InventoryUi {
   open = false;
-  cursorStack = null;
+  cursorStack: ItemStack | null = null;
+  overlayEl = document.createElement('div');
+  cursorEl = document.createElement('div');
+  mainSlotEls: HTMLElement[] = [];
+  player: Player;
 
-  constructor(player) {
+  constructor(player: Player) {
     this.player = player;
-    this.#buildDom();
+    this.buildDom();
 
     document.addEventListener('keydown', (e) => {
       if (e.code === 'KeyE') this.toggle();
@@ -43,7 +50,7 @@ export class InventoryUi {
     if (!this.open) return;
 
     for (let i = 0; i < MAIN_SIZE; i++) {
-      this.#renderSlot(
+      this.renderSlot(
         this.mainSlotEls[i],
         this.player.inventory.getSlot(HOTBAR_SIZE + i),
       );
@@ -58,7 +65,7 @@ export class InventoryUi {
     }
   }
 
-  #renderSlot(el, stack) {
+  private renderSlot(el: HTMLElement, stack: ItemStack) {
     el.innerHTML = stack
       ? `
         <img class="toolbar-icon" src="${stack.item.icon}" />
@@ -67,7 +74,7 @@ export class InventoryUi {
       : '';
   }
 
-  #handleSlotClick(absoluteIndex) {
+  private handleSlotClick(absoluteIndex: number) {
     const inventory = this.player.inventory;
     const slotStack = inventory.getSlot(absoluteIndex);
 
@@ -97,8 +104,7 @@ export class InventoryUi {
     this.cursorStack = slotStack;
   }
 
-  #buildDom() {
-    this.overlayEl = document.createElement('div');
+  private buildDom() {
     this.overlayEl.id = 'inventory-overlay';
     this.overlayEl.style.display = 'none';
 
@@ -109,25 +115,24 @@ export class InventoryUi {
 
     const mainGridEl = document.createElement('div');
     mainGridEl.id = 'inventory-grid';
-    this.mainSlotEls = this.#buildSlotRow(mainGridEl, MAIN_SIZE, HOTBAR_SIZE);
+    this.mainSlotEls = this.buildSlotRow(mainGridEl, MAIN_SIZE, HOTBAR_SIZE);
     this.overlayEl.append(mainGridEl);
 
     document.body.append(this.overlayEl);
 
-    this.cursorEl = document.createElement('div');
     this.cursorEl.id = 'inventory-cursor';
     this.cursorEl.className = 'toolbar-slot';
     this.cursorEl.style.display = 'none';
     document.body.append(this.cursorEl);
   }
 
-  #buildSlotRow(container, count, offset) {
+  private buildSlotRow(container: HTMLElement, count: number, offset: number) {
     const slotEls = [];
     for (let i = 0; i < count; i++) {
       const slotEl = document.createElement('div');
       slotEl.className = 'toolbar-slot';
       slotEl.id = `inventory-slot-${offset + i}`;
-      slotEl.addEventListener('click', () => this.#handleSlotClick(offset + i));
+      slotEl.addEventListener('click', () => this.handleSlotClick(offset + i));
       container.append(slotEl);
       slotEls.push(slotEl);
     }

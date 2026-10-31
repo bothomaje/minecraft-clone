@@ -1,34 +1,40 @@
-import { CONFIG } from '../app/Config';
+import { CONFIG } from '../core/Config';
 import { state } from '../app/state';
+import { Player } from '../engine/entities/Player';
 
 export class Hud {
-  #lastActiveSlot = state.activeSlot;
-  toolbarSlots = [];
+  private lastActiveSlot = state.activeSlot;
+  toolbarSlots: HTMLElement[] = [];
+  player: Player;
+  position: HTMLElement | null;
+  status: HTMLElement | null;
+  toolbar: HTMLElement = document.createElement('div');
 
-  constructor(player) {
+  constructor(player: Player) {
     this.player = player;
     this.position = document.getElementById('player-position');
     this.status = document.getElementById('status');
-    this.#buildDom();
+    this.buildDom();
   }
 
   update() {
+    if (!this.position || !this.status) return;
+
     this.position.innerHTML = state.playerPosition;
     this.status.innerHTML = state.status;
-    this.#updateSlots();
+    this.updateSlots();
 
-    if (state.activeSlot != this.#lastActiveSlot) {
-      this.#updateToolbarSelection(state.activeSlot);
-      this.#lastActiveSlot = state.activeSlot;
+    if (state.activeSlot != this.lastActiveSlot) {
+      this.updateToolbarSelection(state.activeSlot);
+      this.lastActiveSlot = state.activeSlot;
     }
   }
 
-  #buildDom() {
+  private buildDom() {
     const toolbarContainer = document.createElement('div');
     toolbarContainer.id = 'toolbar-container';
     document.body.append(toolbarContainer);
 
-    this.toolbar = document.createElement('div');
     this.toolbar.id = 'toolbar';
 
     for (let i = 0; i < CONFIG.inventory.toolbar; i++) {
@@ -42,10 +48,10 @@ export class Hud {
     this.toolbarSlots[0].classList.add('selected');
     toolbarContainer.append(this.toolbar);
 
-    this.#updateSlots();
+    this.updateSlots();
   }
 
-  #updateSlots() {
+  private updateSlots() {
     for (let i = 0; i < CONFIG.inventory.toolbar; i++) {
       if (this.player.inventory.slots[i]) {
         const counter = `<span class="item-count">${this.player.inventory.slots[i].count}</span>`;
@@ -57,8 +63,8 @@ export class Hud {
     }
   }
 
-  #updateToolbarSelection(slotIndex) {
-    this.toolbarSlots[this.#lastActiveSlot].classList.remove('selected');
+  private updateToolbarSelection(slotIndex: number) {
+    this.toolbarSlots[this.lastActiveSlot].classList.remove('selected');
     this.toolbarSlots[slotIndex].classList.add('selected');
   }
 }

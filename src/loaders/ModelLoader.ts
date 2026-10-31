@@ -1,21 +1,23 @@
 import { Group } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
+interface Models {
+  pickaxe: Group | undefined;
+}
 export class ModelLoader {
   loader = new GLTFLoader();
 
-  models = {
-    pickaxe: undefined as Group | undefined,
+  models: Models = {
+    pickaxe: undefined,
   };
 
   /**
    * Loads the 3D models into memory
    * @param {(object) => ()} onLoad
    */
-  loadModels(onLoad: (models: object) => void) {
+  loadModels(onLoad: (models: Models) => void) {
     this.loader.load('/models/pickaxe.glb', (model) => {
-      const mesh = model.scene;
-      this.models.pickaxe = mesh;
+      this.models.pickaxe = model.scene;
       onLoad(this.models);
     });
   }

@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { Tool } from './Tool';
-import { CONFIG } from '../../app/Config';
+import { CONFIG } from '../../core/Config';
 import { state } from '../../app/state';
 import { createPlayerCamera } from '../../scene/camera';
-import { textures } from '../../loaders/TextureManager';
-import { Inventory } from '../items/Inventory';
+import { Inventory } from '../../engine/items/Inventory';
 
 export class Player {
   radius = CONFIG.player.radius;
@@ -16,7 +15,6 @@ export class Player {
   maxSpeed = CONFIG.player.maxSpeed;
   input = new THREE.Vector3();
   velocity = new THREE.Vector3();
-  #worldVelocity = new THREE.Vector3();
 
   camera = createPlayerCamera();
   controls = new PointerLockControls(this.camera, document.body);
@@ -25,10 +23,13 @@ export class Player {
   inventory = new Inventory();
   listener = new THREE.AudioListener();
 
+  selectionHelper: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>;
+  crackHelper: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>;
+
   /**
    * @param {THREE.Scene} scene
    */
-  constructor(scene) {
+  constructor(scene: THREE.Scene) {
     this.camera.position.copy(CONFIG.player.position);
     scene.add(this.camera);
 
@@ -64,11 +65,10 @@ export class Player {
    * @returns {THREE.Vector3}
    */
   get worldVelocity() {
-    this.#worldVelocity.copy(this.velocity);
-    this.#worldVelocity.applyEuler(
-      new THREE.Euler(0, this.camera.rotation.y, 0),
-    );
-    return this.#worldVelocity;
+    const v = new THREE.Vector3();
+    v.copy(this.velocity);
+    v.applyEuler(new THREE.Euler(0, this.camera.rotation.y, 0));
+    return v;
   }
 
   /**
@@ -79,7 +79,7 @@ export class Player {
     this.tool.update();
   }
 
-  showSelection(position, colour, scale = 1) {
+  showSelection(position: THREE.Vector3, colour: number, scale = 1) {
     this.selectionHelper.position.copy(position);
     this.selectionHelper.scale.setScalar(scale);
     if (colour !== undefined)
@@ -91,18 +91,18 @@ export class Player {
     this.selectionHelper.visible = false;
   }
 
-  showCrack(position, stage) {
-    const clampedStage = Math.max(
-      0,
-      Math.min(stage, textures.breaking.length - 1),
-    );
-    this.crackHelper.position.copy(position);
-    if (this.crackHelper.material.map !== textures.breaking[clampedStage]) {
-      this.crackHelper.material.map = textures.breaking[clampedStage];
-      this.crackHelper.material.needsUpdate = true;
-    }
-    this.crackHelper.visible = true;
-  }
+  // showCrack(position: THREE.Vector3, stage) {
+  //   const clampedStage = Math.max(
+  //     0,
+  //     Math.min(stage, textures.breaking.length - 1),
+  //   );
+  //   this.crackHelper.position.copy(position);
+  //   if (this.crackHelper.material.map !== textures.breaking[clampedStage]) {
+  //     this.crackHelper.material.map = textures.breaking[clampedStage];
+  //     this.crackHelper.material.needsUpdate = true;
+  //   }
+  //   this.crackHelper.visible = true;
+  // }
 
   hideCrack() {
     this.crackHelper.visible = false;
@@ -112,12 +112,12 @@ export class Player {
    * Applies a change in velocity 'dv' that is specified in the world frame
    * @param {THREE.Vector3} dv
    */
-  applyWorldDeltaVelocity(dv) {
+  applyWorldDeltaVelocity(dv: THREE.Vector3) {
     dv.applyEuler(new THREE.Euler(0, -this.camera.rotation.y, 0));
     this.velocity.add(dv);
   }
 
-  applyInputs(dt) {
+  applyInputs(dt: number) {
     if (this.controls.isLocked) {
       this.velocity.x = this.input.x;
       this.velocity.z = this.input.z;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_WIDTH } from '../engine/world/Constants';
-import { CONFIG } from '../app/Config';
+import { CONFIG } from '../core/Config';
 import { ChunkMeshData, MeshLayer } from './ChunkMesher';
 
 const waterGeometry = new THREE.PlaneGeometry();
