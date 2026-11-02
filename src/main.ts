@@ -1,5 +1,5 @@
-import { App } from './app/App';
+import { Game } from './core/Game';
 import { texturesReady } from './loaders/TextureManager';
 
-const app = await texturesReady.then(() => new App());
+const app = await texturesReady.then(() => new Game());
 app.start();

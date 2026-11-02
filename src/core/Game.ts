@@ -28,7 +28,7 @@ import { CloudLayer } from '../render/clouds/CloudLayer';
 import { buildBiomeColours } from '../render/BiomeColours';
 import { biomeSources } from '../engine/world/BiomeSource';
 
-export class App {
+export class Game {
   stats = new Stats();
   previousTime = performance.now();
   scene: Scene;
