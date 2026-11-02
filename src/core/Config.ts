@@ -143,4 +143,11 @@ export const CONFIG = {
       inventory: 'minecraft_inventory',
     },
   },
+  clouds: {
+    height: 120, // above max terrain
+    cellSize: 16, // blocks per image pixel
+    thickness: 4,
+    speed: 2, // blocks per second, +x
+    opacity: 0.8,
+  },
 };

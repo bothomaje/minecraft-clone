@@ -19,6 +19,14 @@ import { InventoryUi } from '../ui/InventoryUi';
 import { surfaceHeightAt } from '../engine/world/WorldGenerator';
 import { WorldRenderer } from '../render/WorldRenderer';
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { TextureAtlas } from '../render/atlas/TextureAtlas';
+import { bakeMeshTables } from '../render/MeshTables';
+import { createMaterials } from '../render/Materials';
+import { getTextures } from '../render/models/BlockRender';
+import { cloudTexture, colourmaps } from '../loaders/TextureManager';
+import { CloudLayer } from '../render/clouds/CloudLayer';
+import { buildBiomeColours } from '../render/BiomeColours';
+import { biomeSources } from '../engine/world/BiomeSource';
 
 export class App {
   stats = new Stats();
@@ -37,6 +45,7 @@ export class App {
   physics: PhysicsSystem;
   sounds: SoundManager;
   interaction: InteractionSystem;
+  clouds: CloudLayer;
 
   constructor() {
     document.body.append(this.stats.dom);
@@ -65,10 +74,24 @@ export class App {
     this.controls.target.copy(CONFIG.player.position);
     this.controls.update();
 
-    this.worldRenderer = new WorldRenderer(this.world);
+    const atlas = TextureAtlas.build(getTextures());
+    const colours = buildBiomeColours(
+      biomeSources[this.world.params.biomeSource],
+      {
+        grass: colourmaps.grass.image,
+        foliage: colourmaps.foliage.image,
+        dryFoliage: colourmaps.dryFoliage.image,
+      },
+    );
+    this.worldRenderer = new WorldRenderer(
+      this.world,
+      bakeMeshTables(atlas, colours),
+      createMaterials(atlas),
+    );
     this.worldRenderer.mount(scene);
+    this.clouds = new CloudLayer(cloudTexture.image);
+    this.clouds.mount(scene);
     this.world.generate();
-    // scene.add(this.world);
 
     this.player = new Player(scene);
     this.orbitCamera.position.set(
@@ -116,6 +139,7 @@ export class App {
       this.lighting.update(this.player);
     }
     this.worldRenderer.update();
+    this.clouds.update(dt, this.player.position.x, this.player.position.z);
 
     this.renderer.render(
       this.scene,

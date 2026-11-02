@@ -88,7 +88,6 @@ export function generateChunkData(
   generateCaves(data, context, heights, originX, originZ);
   generateOres(data, context, originX, originZ);
   generateTrees(data, context, originX, originZ);
-  generateClouds(data, context, originX, originZ);
   return data;
 }
 
@@ -245,6 +244,7 @@ function generateTerrain(
       const wz = originZ + z;
       const { biome, height } = columnAt(context, wx, wz);
       heights[x * CHUNK_WIDTH + z] = height;
+      data.biomes[x * CHUNK_WIDTH + z] = context.source.indexOf.get(biome)!;
 
       const soil = soilLayers(biome, height, context);
       const soilDepth =
@@ -308,37 +308,6 @@ function bedrockTopY(seed: number, minY: number, x: number, z: number): number {
     minY +
     Math.max(Math.round((1 - hashRandom(seed, x, z, SALT.bedrock)) * 10), 5)
   );
-}
-
-/**
- * Creates happy little clouds
- * @param {RNG} rng
- */
-function generateClouds(
-  data: ChunkData,
-  context: Context,
-  originX: number,
-  originZ: number,
-) {
-  for (let x = 0; x < CHUNK_WIDTH; x++) {
-    for (let z = 0; z < CHUNK_WIDTH; z++) {
-      const value =
-        (context.noise.noise(
-          (originX + x) / context.config.clouds.scale,
-          (originZ + z) / context.config.clouds.scale,
-        ) +
-          1) *
-        0.5;
-
-      const { height } = context.config.clouds;
-      if (
-        value < context.config.clouds.density &&
-        data.getId(x, height, z) === EMPTY_ID
-      ) {
-        setBlock(data, x, height, z, blockParams.cloud);
-      }
-    }
-  }
 }
 
 export interface PlacedTree {
