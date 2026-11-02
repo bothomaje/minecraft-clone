@@ -23,7 +23,6 @@ export class TextureAtlas {
 
   static build(textures: Set<THREE.Texture>): TextureAtlas {
     const list = [...textures];
-    console.log(list.map((texture) => texture.image));
 
     // check that image exists
     const image = (texture: THREE.Texture) => {
