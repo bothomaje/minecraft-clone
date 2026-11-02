@@ -19,6 +19,7 @@ function toGeometry(layer: MeshLayer): THREE.BufferGeometry | null {
   g.setAttribute('position', new THREE.BufferAttribute(layer.positions, 3));
   g.setAttribute('normal', new THREE.BufferAttribute(layer.normals, 3));
   g.setAttribute('uv', new THREE.BufferAttribute(layer.uvs, 2));
+  g.setAttribute('color', new THREE.BufferAttribute(layer.colors, 3));
   g.setIndex(new THREE.BufferAttribute(layer.indices, 1));
   for (const grp of layer.groups)
     g.addGroup(grp.start, grp.count, grp.material);

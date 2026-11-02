@@ -88,7 +88,7 @@ export function generateChunkData(
   generateCaves(data, context, heights, originX, originZ);
   generateOres(data, context, originX, originZ);
   generateTrees(data, context, originX, originZ);
-  generateClouds(data, context, originX, originZ);
+  // generateClouds(data, context, originX, originZ);
   return data;
 }
 

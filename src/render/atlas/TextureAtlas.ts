@@ -23,6 +23,7 @@ export class TextureAtlas {
 
   static build(textures: Set<THREE.Texture>): TextureAtlas {
     const list = [...textures];
+    console.log(list.map((texture) => texture.image));
 
     // check that image exists
     const image = (texture: THREE.Texture) => {
@@ -58,7 +59,7 @@ export class TextureAtlas {
         );
 
       const column = index % numColumns;
-      const row = Math.floor(index / column);
+      const row = Math.floor(index / numColumns);
       canvasContext.drawImage(img, column * tileSize, row * tileSize);
       regions.set(texture, {
         u0: (column * tileSize) / width + padU,

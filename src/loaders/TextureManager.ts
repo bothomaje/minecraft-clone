@@ -1,8 +1,15 @@
 import * as THREE from 'three';
 
-const textureLoader = new THREE.TextureLoader();
+const manager = new THREE.LoadingManager();
+const textureLoader = new THREE.TextureLoader(manager);
 
-function loadTexture(path: string) {
+export const texturesReady = new Promise<void>((resolve, reject) => {
+  manager.onLoad = () => resolve();
+  manager.onError = (url) =>
+    reject(new Error(`Failed to load texture: ${url}`));
+});
+
+export function loadTexture(path: string) {
   const texture = textureLoader.load(path);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.NearestFilter;
@@ -16,7 +23,7 @@ export interface Texture {
   bottom?: THREE.Texture;
 }
 
-export const textures = {
+export const textures: Record<string, Texture> = {
   // breaking: Array.from({ length: 10 }, (_, stage) =>
   //   loadTexture(`textures/block/breaking/destroy_stage_${stage}.png`),
   // ),
@@ -168,4 +175,6 @@ export const textures = {
   mossBlock: {
     side: loadTexture('textures/block/moss_block.png'),
   },
-} satisfies Record<string, Texture>;
+};
+
+export const cloudTexture = loadTexture('textures/environment/clouds.png');

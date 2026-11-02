@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { waterSurfaceY } from '../engine/world/DimensionConfig';
 import { World, WorldListener } from '../engine/world/World';
-import { meshChunk } from './ChunkMesher';
+import { meshChunk, MeshTables } from './ChunkMesher';
 import { ChunkRenderer } from './ChunkRenderer';
 import { buildMeshInput } from './MeshInput';
-import { buildMeshTables, materialTable } from './MeshTables';
 import { RenderAdapter } from './RenderAdapter';
 
 interface Job {
@@ -17,12 +16,15 @@ const keyOf = (x: number, z: number) => `${x},${z}`;
 const FRAME_BUDGET_MS = 6;
 
 export class WorldRenderer implements RenderAdapter, WorldListener {
-  private tables = buildMeshTables(); // must run before materialTable is read
   private chunks: ChunkRenderer;
   private queue = new Map<string, Job>();
 
-  constructor(private world: World) {
-    this.chunks = new ChunkRenderer(materialTable, () =>
+  constructor(
+    private world: World,
+    private tables: MeshTables,
+    materials: THREE.Material[],
+  ) {
+    this.chunks = new ChunkRenderer(materials, () =>
       waterSurfaceY(world.params),
     );
     world.listener = this;
