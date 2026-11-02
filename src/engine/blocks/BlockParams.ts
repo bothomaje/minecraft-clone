@@ -117,15 +117,6 @@ export const blockParams: Record<string, Block> = {
     sounds: sounds.stone,
     drops: [],
   },
-  // cloud: {
-  //   id: 9,
-  //   name: 'cloud',
-  //   category: BlockCategory.NON_SOLID,
-  //   solid: false,
-  //   opaque: false,
-  //   hardness: 0,
-  //   drops: [],
-  // },
   sand: {
     id: 12,
     name: 'sand',

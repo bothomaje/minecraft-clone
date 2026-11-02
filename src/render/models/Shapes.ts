@@ -1,13 +1,32 @@
 import * as THREE from 'three';
 import { FACE_NORMALS, faceIndexOf, NO_CULL, Vec3 } from './Faces';
 
+export type RenderLayer = 'opaque' | 'cutout' | 'transparent';
+export type Tint = 'grass' | 'foliage' | 'dryFoliage';
+export const TINT_KIND = { grass: 1, foliage: 2, dryFoliage: 3 } as const;
+
 export interface Quad {
   vertices: [Vec3, Vec3, Vec3, Vec3]; // bottom-left, bottom-right, top-right, top-left
   normal: Vec3;
   texture: THREE.Texture;
   uv?: number[]; // bottom-left, bottom-right, top-right, top-left
   cull: number;
+  layer?: RenderLayer; // default: the block's layer
+  tint?: Tint; // default: the block's tint
 }
+
+export interface FaceTint {
+  top?: Tint;
+  side?: Tint;
+  bottom?: Tint;
+}
+export interface Overlay {
+  texture: THREE.Texture;
+  tint?: Tint;
+}
+
+const faceTints = (t?: FaceTint): (Tint | undefined)[] =>
+  t ? [t.side, t.side, t.top, t.bottom, t.side, t.side] : [];
 
 export type Model = Quad[];
 
@@ -30,7 +49,12 @@ function faceTextures(textures: CubeTextures): THREE.Texture[] {
   ];
 }
 
-export function box(min: Vec3, max: Vec3, textures: THREE.Texture[]): Model {
+export function box(
+  min: Vec3,
+  max: Vec3,
+  textures: THREE.Texture[],
+  tints: (Tint | undefined)[] = [],
+): Model {
   const [x0, y0, z0] = min;
   const [x1, y1, z1] = max;
   const faces: Vec3[][] = [
@@ -95,13 +119,19 @@ export function box(min: Vec3, max: Vec3, textures: THREE.Texture[]): Model {
     texture: textures[face],
     uv: vertices.flatMap(uv[face]),
     cull: onEdge[face] ? face : NO_CULL,
+    tint: tints[face],
   }));
 }
 
 // shape registry
 export const shapes = {
-  cube: (textures: CubeTextures) =>
-    box([-0.5, -0.5, -0.5], [0.5, 0.5, 0.5], faceTextures(textures)),
+  cube: (textures: CubeTextures, tint?: FaceTint) =>
+    box(
+      [-0.5, -0.5, -0.5],
+      [0.5, 0.5, 0.5],
+      faceTextures(textures),
+      faceTints(tint),
+    ),
 };
 export type ShapeName = keyof typeof shapes;
 

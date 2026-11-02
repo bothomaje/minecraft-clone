@@ -24,9 +24,6 @@ export interface Texture {
 }
 
 export const textures: Record<string, Texture> = {
-  // breaking: Array.from({ length: 10 }, (_, stage) =>
-  //   loadTexture(`textures/block/breaking/destroy_stage_${stage}.png`),
-  // ),
   dirt: { side: loadTexture('textures/block/dirt.png') },
   grassBlock: {
     top: loadTexture('textures/block/grass_block_top.png'),
@@ -178,3 +175,9 @@ export const textures: Record<string, Texture> = {
 };
 
 export const cloudTexture = loadTexture('textures/environment/clouds.png');
+
+export const colourmaps = {
+  grass: loadTexture('textures/colourmap/grass.png'),
+  foliage: loadTexture('textures/colourmap/foliage.png'),
+  dryFoliage: loadTexture('textures/colourmap/dry_foliage.png'),
+};

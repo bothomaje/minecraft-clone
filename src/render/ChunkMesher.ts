@@ -6,19 +6,22 @@ export const Layer = { NONE: 0, OPAQUE: 1, CUTOUT: 2, TRANSPARENT: 3 } as const;
 
 /** All arrays indexed by block id, except faceMaterial (id * 6 + face) */
 export interface MeshTables {
-  layer: Uint8Array;
   opaque: Uint8Array; // 1 = hides neighbouring faces
   cullSame: Uint8Array; // 1 = hide faces between two blocks of the same id
-  material: Uint8Array; // slot in the shared material array
   stateCount: Uint8Array;
   modelBase: Uint32Array; // first model index; model index = modelBase + state
   tint: Float32Array; // rgb x 3 per id, linear
+  biomeRgb: Float32Array; // [(kind - 1) * biomeCount + biome] * 3
+  biomeCount: number;
   quadStart: Uint32Array;
   quadCount: Uint8Array;
   quadPos: Float32Array; // 12 floats (4 verts)
   quadNormal: Float32Array; // 3
   quadUv: Float32Array; // 8, already in atlas space
   quadCull: Uint8Array;
+  quadLayer: Uint8Array;
+  quadMaterial: Uint8Array;
+  quadTint: Uint8Array;
 }
 
 export interface MeshLayer {
@@ -33,6 +36,7 @@ export interface MeshLayer {
 export interface MeshInput {
   ids: Uint16Array;
   states: Uint8Array;
+  biomes: Uint8Array;
   /** Border columns of neighbour chunks, null if not loaded.
    *  Index: (y - MIN_Y) * W + i, i = z for px/nx, x for pz/nz. */
   borders: {
@@ -150,23 +154,35 @@ export function meshChunk(input: MeshInput, t: MeshTables): ChunkMeshData {
       for (let z = 0; z < W; z++) {
         const i = blockIndex(x, y, z);
         const id = input.ids[i];
-        const layer = t.layer[id];
-        if (layer === Layer.NONE) continue;
+        if (id === 0) continue; // air
+        const biome = input.biomes[x * W + z];
 
         const model =
           t.modelBase[id] + Math.min(input.states[i], t.stateCount[id] - 1);
         const first = t.quadStart[model];
         const last = first + t.quadCount[model];
-        const material = t.material[id];
 
         for (let q = first; q < last; q++) {
           const cull = t.quadCull[q];
           if (cull !== NO_CULL) {
-            if (cull === 3 && y === MIN_Y) continue; // underside of world
+            if (cull === 3 && y === MIN_Y) continue;
             const [dx, dy, dz] = FACE_NORMALS[cull];
             if (isHidden(t, id, idAt(input, x + dx, y + dy, z + dz))) continue;
           }
-          builders[layer]!.addQuad(material, t, q, x, y, z, t.tint, id * 3);
+          const kind = t.quadTint[q];
+          const rgb = kind === 0 ? t.tint : t.biomeRgb;
+          const off =
+            kind === 0 ? id * 3 : ((kind - 1) * t.biomeCount + biome) * 3;
+          builders[t.quadLayer[q]]!.addQuad(
+            t.quadMaterial[q],
+            t,
+            q,
+            x,
+            y,
+            z,
+            rgb,
+            off,
+          );
         }
       }
     }

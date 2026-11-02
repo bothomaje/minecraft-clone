@@ -1,6 +1,6 @@
 import { textures } from '../../loaders/TextureManager';
 import * as THREE from 'three';
-import { CubeTextures, Rotation, ShapeName } from './Shapes';
+import { CubeTextures, FaceTint, Rotation, ShapeName, Tint } from './Shapes';
 
 export type RenderLayer = 'opaque' | 'cutout' | 'transparent';
 
@@ -8,7 +8,8 @@ export interface BlockRender {
   model: ShapeName;
   textures: CubeTextures;
   layer: RenderLayer;
-  tint?: number;
+  tint?: number | Tint; // number = fixed colour, 'grass'/'foliage' = biome colour, all faces
+  faceTint?: FaceTint;
   cullSame?: boolean;
   rotation?: Rotation;
 }
@@ -20,7 +21,7 @@ export const cube = (
 
 export const blockRender: Record<string, BlockRender> = {
   stone: cube(textures.stone),
-  grassBlock: cube(textures.grassBlock),
+  grassBlock: cube(textures.grassBlock, { faceTint: { top: 'grass' } }),
   dirt: cube(textures.dirt),
   cobblestone: cube(textures.cobblestone),
   bedrock: cube(textures.bedrock),
@@ -28,13 +29,13 @@ export const blockRender: Record<string, BlockRender> = {
   ironOre: cube(textures.ironOre),
   coalOre: cube(textures.coalOre),
   oakLog: cube(textures.oakLog, { rotation: 'axis' }),
-  oakLeaves: cube(textures.oakLeaves, { layer: 'cutout', tint: 0x79c05a }),
+  oakLeaves: cube(textures.oakLeaves, { layer: 'cutout', tint: 'foliage' }),
   snow: cube(textures.snow),
   cactus: cube(textures.cactus),
   jungleLog: cube(textures.jungleLog, { rotation: 'axis' }),
   jungleLeaves: cube(textures.jungleLeaves, {
     layer: 'cutout',
-    tint: 0x79c05a,
+    tint: 'foliage',
   }),
   deepslate: cube(textures.deepslate, { rotation: 'axis' }), // check block states
   deepslateCoalOre: cube(textures.deepslateCoalOre),

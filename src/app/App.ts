@@ -23,8 +23,10 @@ import { TextureAtlas } from '../render/atlas/TextureAtlas';
 import { bakeMeshTables } from '../render/MeshTables';
 import { createMaterials } from '../render/Materials';
 import { getTextures } from '../render/models/BlockRender';
-import { cloudTexture } from '../loaders/TextureManager';
+import { cloudTexture, colourmaps } from '../loaders/TextureManager';
 import { CloudLayer } from '../render/clouds/CloudLayer';
+import { buildBiomeColours } from '../render/BiomeColours';
+import { biomeSources } from '../engine/world/BiomeSource';
 
 export class App {
   stats = new Stats();
@@ -73,16 +75,23 @@ export class App {
     this.controls.update();
 
     const atlas = TextureAtlas.build(getTextures());
+    const colours = buildBiomeColours(
+      biomeSources[this.world.params.biomeSource],
+      {
+        grass: colourmaps.grass.image,
+        foliage: colourmaps.foliage.image,
+        dryFoliage: colourmaps.dryFoliage.image,
+      },
+    );
     this.worldRenderer = new WorldRenderer(
       this.world,
-      bakeMeshTables(atlas),
+      bakeMeshTables(atlas, colours),
       createMaterials(atlas),
     );
     this.worldRenderer.mount(scene);
     this.clouds = new CloudLayer(cloudTexture.image);
     this.clouds.mount(scene);
     this.world.generate();
-    // scene.add(this.world);
 
     this.player = new Player(scene);
     this.orbitCamera.position.set(

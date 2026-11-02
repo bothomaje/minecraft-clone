@@ -69,7 +69,7 @@ export interface DimensionConfig {
     };
     entrances: { scale: number; threshold: number }; // threshold >= 1 disables entrances
   };
-  clouds: { enabled: boolean; scale: number; density: number; height: number };
+  // clouds: { enabled: boolean; scale: number; density: number; height: number };
 }
 
 export const WATER_SURFACE_OFFSET = 0.4;

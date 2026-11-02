@@ -1,4 +1,4 @@
-import { CHUNK_VOLUME } from './Constants';
+import { CHUNK_VOLUME, CHUNK_WIDTH } from './Constants';
 import { blockIndex } from './Coords';
 
 export const EMPTY_ID = 0;
@@ -14,6 +14,7 @@ export const unpackEdit = (value: number): { id: number; state: number } => ({
 export class ChunkData {
   readonly ids = new Uint16Array(CHUNK_VOLUME);
   readonly states = new Uint8Array(CHUNK_VOLUME);
+  readonly biomes = new Uint8Array(CHUNK_WIDTH * CHUNK_WIDTH);
 
   getId(x: number, y: number, z: number): number {
     return this.ids[blockIndex(x, y, z)];

@@ -4,6 +4,8 @@ import { Biome, Climate, overworldBiomes } from './Biomes';
 
 export interface BiomeSource {
   readonly biomes: Readonly<Record<string, Biome>>;
+  readonly names: readonly string[];
+  readonly indexOf: ReadonlyMap<string, number>;
   readonly maxTreeDensity: number;
   readonly leafIds: ReadonlySet<number>;
   pick(climate: Climate, elevation: number): string;
@@ -12,6 +14,8 @@ export interface BiomeSource {
 export function createBiomeSource(
   biomes: Readonly<Record<string, Biome>>,
 ): BiomeSource {
+  const names = Object.keys(biomes);
+  const indexOf = new Map(names.map((name, i) => [name, i]));
   const index = new BoxIndex(
     Object.entries(biomes).map(([name, biome]) => ({
       value: name,
@@ -29,6 +33,8 @@ export function createBiomeSource(
 
   return {
     biomes,
+    names,
+    indexOf,
     maxTreeDensity,
     leafIds,
     pick(climate, elevation) {

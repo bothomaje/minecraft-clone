@@ -31,6 +31,7 @@ export function buildMeshInput(
   if (!data) return null;
   return {
     ids: copy ? data.ids.slice() : data.ids,
+    biomes: copy ? data.biomes.slice() : data.biomes,
     states: copy ? data.states.slice() : data.states,
     borders: {
       px: column(world.getChunkData(cx + 1, cz), 'x', 0),

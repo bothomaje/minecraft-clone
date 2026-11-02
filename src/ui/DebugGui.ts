@@ -97,12 +97,12 @@ export function createDebugGui(scene: Scene, world: World, player: Player) {
     .add(world.params.trees.canopy, 'density', 0, 1)
     .name('Canopy Density');
 
-  const cloudsFolder = terrainFolder.addFolder('Clouds').close();
-  cloudsFolder.add(world.params.clouds, 'scale', 0, 100).name('Cloud Size');
-  cloudsFolder.add(world.params.clouds, 'density', 0, 1).name('Cloud Cover');
-  cloudsFolder
-    .add(world.params.clouds, 'height', 0, 87, 1)
-    .name('Cloud Height');
+  // const cloudsFolder = terrainFolder.addFolder('Clouds').close();
+  // cloudsFolder.add(world.params.clouds, 'scale', 0, 100).name('Cloud Size');
+  // cloudsFolder.add(world.params.clouds, 'density', 0, 1).name('Cloud Cover');
+  // cloudsFolder
+  //   .add(world.params.clouds, 'height', 0, 87, 1)
+  //   .name('Cloud Height');
 
   let regenerateTimeout: number;
   gui.onChange(() => {

@@ -3,7 +3,8 @@ import { Block, blockParams } from '../engine/blocks/BlockParams';
 import { TextureAtlas } from './atlas/TextureAtlas';
 import { Layer, MeshTables } from './ChunkMesher';
 import { blockRender } from './models/BlockRender';
-import { rotateModel, shapes } from './models/Shapes';
+import { rotateModel, shapes, TINT_KIND } from './models/Shapes';
+import { BiomeColourTable } from './BiomeColours';
 
 const LAYER = {
   opaque: Layer.OPAQUE,
@@ -13,7 +14,10 @@ const LAYER = {
 const SLOT = { opaque: 0, cutout: 1, transparent: 2 } as const;
 const UNIT_UV = [0, 0, 1, 0, 1, 1, 0, 1];
 
-export function bakeMeshTables(atlas: TextureAtlas): MeshTables {
+export function bakeMeshTables(
+  atlas: TextureAtlas,
+  colours: BiomeColourTable,
+): MeshTables {
   const entries = Object.entries(blockParams) as [string, Block][];
   const size = Math.max(...entries.map(([, b]) => b.id)) + 1;
 
@@ -31,6 +35,9 @@ export function bakeMeshTables(atlas: TextureAtlas): MeshTables {
   const nrm: number[] = [];
   const uv: number[] = [];
   const cull: number[] = [];
+  const quadLayer: number[] = [];
+  const quadMaterial: number[] = [];
+  const quadTint: number[] = [];
   let quads = 0;
   let models = 0;
 
@@ -43,13 +50,14 @@ export function bakeMeshTables(atlas: TextureAtlas): MeshTables {
     opaque[b.id] = b.opaque ? 1 : 0;
     cullSame[b.id] = (def.cullSame ?? def.layer === 'transparent') ? 1 : 0;
     material[b.id] = SLOT[def.layer];
-    if (def.tint !== undefined) {
-      const c = new THREE.Color(def.tint); // converts to linear working space
+    const wholeTint = typeof def.tint === 'string' ? def.tint : undefined;
+    if (typeof def.tint === 'number') {
+      const c = new THREE.Color(def.tint);
       tint.set([c.r, c.g, c.b], b.id * 3);
     }
 
     // One baked model per possible state value
-    const base = shapes[def.model](def.textures);
+    const base = shapes[def.model](def.textures, def.faceTint);
     const states =
       def.rotation === 'axis' ? 3 : def.rotation === 'facing' ? 4 : 1;
     stateCount[b.id] = states;
@@ -72,16 +80,19 @@ export function bakeMeshTables(atlas: TextureAtlas): MeshTables {
           );
         }
         cull.push(quad.cull);
+        const layer = quad.layer ?? def.layer;
+        quadLayer.push(LAYER[layer]);
+        quadMaterial.push(SLOT[layer]);
+        const kind = quad.tint ?? wholeTint;
+        quadTint.push(kind ? TINT_KIND[kind] : 0);
         quads++;
       }
     }
   }
 
   return {
-    layer,
     opaque,
     cullSame,
-    material,
     stateCount,
     modelBase,
     tint,
@@ -91,5 +102,10 @@ export function bakeMeshTables(atlas: TextureAtlas): MeshTables {
     quadNormal: Float32Array.from(nrm),
     quadUv: Float32Array.from(uv),
     quadCull: Uint8Array.from(cull),
+    quadLayer: Uint8Array.from(quadLayer),
+    quadMaterial: Uint8Array.from(quadMaterial),
+    quadTint: Uint8Array.from(quadTint),
+    biomeRgb: colours.rgb,
+    biomeCount: colours.count,
   };
 }

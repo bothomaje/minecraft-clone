@@ -254,7 +254,7 @@ export const overworldConfig: DimensionConfig = {
     caverns: { scaleXZ: 80, scaleY: 40, threshold: 0.62, minY: -48, maxY: 40 },
     entrances: { scale: 100, threshold: 0.5 },
   },
-  clouds: { enabled: true, scale: 30, density: 0.5, height: 114 },
+  // clouds: { enabled: true, scale: 30, density: 0.5, height: 114 },
 };
 
 export const createOverworldConfig = (): DimensionConfig =>
